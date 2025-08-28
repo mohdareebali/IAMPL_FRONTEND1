@@ -10,34 +10,55 @@ function RegisterScreen() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleRegister = () => {
-    if (companyName && email && companyId && password) {
-      navigate("/employee-setup");
-    } else {
+  // ✅ Register Handler (calls backend API)
+  const handleRegister = async () => {
+    if (!companyName || !email || !companyId || !password) {
       alert("Please fill all fields");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ companyName, email, companyId, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("✅ Registration successful!");
+        navigate("/employee-setup");
+      } else {
+        alert(data.error || "Registration failed");
+      }
+    } catch (error) {
+      console.error("❌ Error:", error);
+      alert("Something went wrong. Please try again.");
     }
   };
 
+  // ✅ Styles
   const containerStyle = {
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
     height: "100vh",
-    background: "linear-gradient(to right, #e3f2fd, #bbdefb)", // ✅ same light gradient
+    background: "linear-gradient(to right, #e3f2fd, #bbdefb)",
     fontFamily: "Arial, sans-serif",
     textAlign: "center",
   };
 
   const headingStyle = {
-    color: "#0d47a1", // ✅ deep blue like Login
+    color: "#0d47a1",
     marginBottom: "20px",
   };
 
   const logoStyle = {
     width: "150px",
     marginBottom: "30px",
-    opacity: 0.9, // ✅ slightly darkened logo
+    opacity: 0.9,
   };
 
   const inputStyle = {
@@ -56,7 +77,7 @@ function RegisterScreen() {
     margin: "15px 0",
     border: "none",
     borderRadius: "6px",
-    backgroundColor: "white", // ✅ consistent with LoginScreen
+    backgroundColor: "white",
     color: "#007bff",
     fontSize: "16px",
     fontWeight: "bold",
@@ -66,7 +87,7 @@ function RegisterScreen() {
 
   return (
     <div style={containerStyle}>
-      {/* ✅ Logo at top */}
+      {/* ✅ Logo */}
       <img src={logo} alt="Company Logo" style={logoStyle} />
 
       <h2 style={headingStyle}>Create Your Account</h2>

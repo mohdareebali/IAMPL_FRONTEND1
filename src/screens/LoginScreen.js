@@ -63,19 +63,39 @@ function LoginScreen() {
     display: "inline-block",
   };
 
-  const handleLogin = () => {
-    if (id && password) {
+  const handleLogin = async () => {
+  if (!id || !password) {
+    alert("Please enter ID and Password");
+    return;
+  }
+
+  try {
+    const response = await fetch("http://localhost:5000/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, password }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert(data.message);
+
+      // ✅ Redirect based on role
       if (role === "manager") {
-        navigate("/dashboard/manager");
-      } else if (role === "employee") {
-        navigate("/dashboard/employee");
+        navigate("/dashboard/manager", { state: { company: data.company } });
       } else {
-        alert("Invalid role");
+        navigate("/dashboard/employee", { state: { company: data.company } });
       }
     } else {
-      alert("Please enter ID and Password");
+      alert(data.error);
     }
-  };
+  } catch (err) {
+    console.error("❌ Login error:", err);
+    alert("Something went wrong. Please try again.");
+  }
+};
+
 
   const handleRegister = () => {
     if (role === "manager") {
