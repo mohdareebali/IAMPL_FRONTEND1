@@ -4,13 +4,20 @@ import { useNavigate } from "react-router-dom";
 
 // helper to generate strong password
 const generatePassword = () => {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-  return Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+  return Array.from({ length: 10 }, () =>
+    chars[Math.floor(Math.random() * chars.length)]
+  ).join("");
 };
 
 function EmployeeSetupScreen() {
   const [employees, setEmployees] = useState([]);
-  const [newEmployee, setNewEmployee] = useState({ id: "", email: "", password: "" });
+  const [newEmployee, setNewEmployee] = useState({
+    id: "",
+    email: "",
+    password: "",
+  });
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -31,126 +38,154 @@ function EmployeeSetupScreen() {
   };
 
   const handleShare = (emp) => {
-    // Here you’d integrate with backend + email API like nodemailer
-    alert(`Shared credentials:\nID: ${emp.id}\nPassword: ${emp.password}\nSent to: ${emp.email}`);
+    alert(
+      `Shared credentials:\nID: ${emp.id}\nPassword: ${emp.password}\nSent to: ${emp.email}`
+    );
   };
 
   return (
     <div style={containerStyle}>
-      <div style={cardStyle}>
-        <h2>Create Employee Credentials</h2>
+      <h2 style={headingStyle}>Create Employee Credentials</h2>
 
-        <input
-          style={inputStyle}
-          type="text"
-          name="id"
-          placeholder="Employee ID"
-          value={newEmployee.id}
-          onChange={handleChange}
-          onBlur={handleGenerate}
-        />
-        <input
-          style={inputStyle}
-          type="email"
-          name="email"
-          placeholder="Employee Email"
-          value={newEmployee.email}
-          onChange={handleChange}
-        />
-        <input
-          style={inputStyle}
-          type="text"
-          placeholder="Generated Password"
-          value={newEmployee.password}
-          readOnly
-        />
+      <input
+        style={inputStyle}
+        type="text"
+        name="id"
+        placeholder="Employee ID"
+        value={newEmployee.id}
+        onChange={handleChange}
+        onBlur={handleGenerate}
+      />
+      <input
+        style={inputStyle}
+        type="email"
+        name="email"
+        placeholder="Employee Email"
+        value={newEmployee.email}
+        onChange={handleChange}
+      />
+      <input
+        style={inputStyle}
+        type="text"
+        placeholder="Generated Password"
+        value={newEmployee.password}
+        readOnly
+      />
 
-        <button style={btnStyle} onClick={handleAdd}>
-          Add Employee
-        </button>
+      <button style={btnStyle} onClick={handleAdd}>
+        ➕ Add Employee
+      </button>
 
-        <div style={{ marginTop: "20px" }}>
-          <h3>Employee List</h3>
-          {employees.map((emp, index) => (
-            <div key={index} style={empCard}>
-              <p><b>ID:</b> {emp.id}</p>
-              <p><b>Email:</b> {emp.email}</p>
-              <p><b>Password:</b> {emp.password}</p>
-              <button style={shareBtn} onClick={() => handleShare(emp)}>Share</button>
-            </div>
-          ))}
-        </div>
-
-        <button style={dashboardBtn} onClick={() => navigate("/dashboard/manager")}>
-          Go to Dashboard
-        </button>
+      <div style={{ marginTop: "20px", width: "100%", maxWidth: "500px" }}>
+        <h3 style={listHeading}>Employee List</h3>
+        {employees.map((emp, index) => (
+          <div key={index} style={empCard}>
+            <p>
+              <b>ID:</b> {emp.id}
+            </p>
+            <p>
+              <b>Email:</b> {emp.email}
+            </p>
+            <p>
+              <b>Password:</b> {emp.password}
+            </p>
+            <button style={shareBtn} onClick={() => handleShare(emp)}>
+              📤 Share
+            </button>
+          </div>
+        ))}
       </div>
+
+      <button
+        style={dashboardBtn}
+        onClick={() => navigate("/dashboard/manager")}
+      >
+        ⬅ Go to Dashboard
+      </button>
     </div>
   );
 }
 
+// ==== Styles ====
+
 const containerStyle = {
   display: "flex",
-  justifyContent: "center",
+  flexDirection: "column",
+  justifyContent: "flex-start",
   alignItems: "center",
-  height: "100vh",
-  background: "#f1f5f9",
+  minHeight: "100vh", // ✅ allows scroll
+  background: "linear-gradient(to right, #e3f2fd, #bbdefb)",
+  fontFamily: "Arial, sans-serif",
+  textAlign: "center",
+  overflowY: "auto", // ✅ makes content scrollable
+  padding: "20px",
 };
 
-const cardStyle = {
-  width: "500px",
-  padding: "30px",
-  borderRadius: "12px",
-  background: "white",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+const headingStyle = {
+  color: "#0d47a1",
+  marginBottom: "20px",
 };
 
 const inputStyle = {
-  padding: "10px",
+  padding: "12px",
   borderRadius: "8px",
-  border: "1px solid #ccc",
+  border: "1px solid #cbd5e1",
   fontSize: "14px",
-  width: "100%",
-  marginBottom: "10px",
+  width: "280px",
+  marginBottom: "12px",
+  outline: "none",
 };
 
 const btnStyle = {
-  padding: "10px",
-  background: "#2563eb",
-  color: "white",
+  padding: "12px",
+  background: "white",
+  color: "#007bff",
   border: "none",
   borderRadius: "8px",
-  width: "100%",
+  width: "280px",
   cursor: "pointer",
+  marginBottom: "15px",
+  fontSize: "16px",
+  fontWeight: "500",
+  transition: "0.3s",
+};
+
+const listHeading = {
+  color: "#0d47a1",
   marginBottom: "10px",
 };
 
 const empCard = {
-  padding: "10px",
-  border: "1px solid #ccc",
+  padding: "12px",
+  border: "1px solid #e2e8f0",
   borderRadius: "8px",
-  marginBottom: "10px",
+  marginBottom: "12px",
+  background: "#f8fafc",
+  textAlign: "left",
 };
 
 const shareBtn = {
-  padding: "5px 10px",
-  background: "#16a34a",
+  padding: "6px 12px",
+  background: "#38b000",
   color: "white",
   border: "none",
   borderRadius: "6px",
   cursor: "pointer",
+  fontSize: "14px",
+  transition: "0.2s",
 };
 
 const dashboardBtn = {
   padding: "12px",
-  background: "#0f172a",
-  color: "white",
+  background: "white",
+  color: "#007bff",
   border: "none",
   borderRadius: "8px",
   fontSize: "16px",
-  width: "100%",
+  width: "280px",
   cursor: "pointer",
-  marginTop: "15px",
+  marginTop: "20px",
+  fontWeight: "500",
 };
 
 export default EmployeeSetupScreen;

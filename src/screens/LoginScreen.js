@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import logo from "../assets/Innovascape-logo.png"; // ✅ update path to your logo
 
 function LoginScreen() {
   const [id, setId] = useState("");
@@ -12,32 +13,54 @@ function LoginScreen() {
   const containerStyle = {
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
     justifyContent: "center",
+    alignItems: "center",
     height: "100vh",
-    background: "#f5f5f5",
+    background: "linear-gradient(to right, #e3f2fd, #bbdefb)", // light blue gradient
     fontFamily: "Arial, sans-serif",
-    textAlign: "center"
+    textAlign: "center",
+  };
+
+  const headingStyle = {
+    color: "#0d47a1", // ✅ deep blue, contrasts well with light background
+    marginBottom: "20px",
+  };
+
+  const logoStyle = {
+    width: "150px",
+    marginBottom: "30px",
   };
 
   const inputStyle = {
-    width: "250px",
-    padding: "10px",
-    margin: "8px 0",
-    border: "1px solid #ccc",
-    borderRadius: "6px"
-  };
-
-  const buttonStyle = {
-    width: "260px",
-    padding: "10px",
+    width: "280px",
+    padding: "12px",
     margin: "10px 0",
     border: "none",
     borderRadius: "6px",
-    backgroundColor: "#007bff",
-    color: "white",
+    fontSize: "14px",
+    outline: "none",
+  };
+
+  const buttonStyle = {
+    width: "280px",
+    padding: "12px",
+    margin: "15px 0",
+    border: "none",
+    borderRadius: "6px",
+    backgroundColor: "white", // ✅ button stands out
+    color: "#007bff",
     fontSize: "16px",
-    cursor: "pointer"
+    fontWeight: "bold",
+    cursor: "pointer",
+    transition: "0.3s",
+  };
+
+  const linkStyle = {
+    color: "#1565c0", // ✅ darker medium blue, looks clickable
+    textDecoration: "underline",
+    cursor: "pointer",
+    marginTop: "5px",
+    display: "inline-block",
   };
 
   const handleLogin = () => {
@@ -62,9 +85,20 @@ function LoginScreen() {
     }
   };
 
+  const handleForgotPassword = () => {
+    navigate("/forgot-password");
+  };
+
   return (
     <div style={containerStyle}>
-      <h2>Login as {role.charAt(0).toUpperCase() + role.slice(1)}</h2>
+      {/* ✅ Logo at top */}
+      <img src={logo} alt="Company Logo" style={logoStyle} />
+
+      <h2 style={headingStyle}>
+  Login as {role.charAt(0).toUpperCase() + role.slice(1)}
+</h2>
+
+
       <input
         style={inputStyle}
         type="text"
@@ -79,16 +113,33 @@ function LoginScreen() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-      <button style={buttonStyle} onClick={handleLogin}>
+      <button
+        style={buttonStyle}
+        onClick={handleLogin}
+        onMouseOver={(e) => {
+          e.target.style.backgroundColor = "#e6e6e6";
+        }}
+        onMouseOut={(e) => {
+          e.target.style.backgroundColor = "white";
+        }}
+      >
         Login
       </button>
 
+      {/* Forgot Password Link */}
+      <p>
+        <span style={linkStyle} onClick={handleForgotPassword}>
+          Forgot Password?
+        </span>
+      </p>
+
+      {/* Register Link for manager */}
       {role === "manager" && (
         <p>
           Don’t have an account?{" "}
-          <a href="#" onClick={handleRegister}>
+          <span style={linkStyle} onClick={handleRegister}>
             Register
-          </a>
+          </span>
         </p>
       )}
     </div>

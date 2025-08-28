@@ -1,24 +1,53 @@
-import React from "react";
+// src/App.js
+import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
+// Screens
 import HomeScreen from "./screens/HomeScreen";
 import RoleSelectScreen from "./screens/RoleSelectScreen";
 import LoginScreen from "./screens/LoginScreen";
+import ForgotPasswordScreen from "./screens/ForgotPasswordScreen";
+import OTPVerificationScreen from "./screens/OTPVerificationScreen";
+import RegisterScreen from "./screens/RegisterScreen";
 import ManagerDashboardScreen from "./screens/ManagerDashboardScreen";
 import EmployeeDashboardScreen from "./screens/EmployeeDashboardScreen";
-import RegisterScreen from "./screens/RegisterScreen"; // add this
-import EmployeeSetUpScreen from "./screens/EmployeeSetUpScreen"; // ✅ use same casing
+import EmployeeSetUpScreen from "./screens/EmployeeSetUpScreen";
+import EmployeeFairsDoneScreen from "./screens/EmployeeFairsDoneScreen";
+import EmployeeRejectedFairScreen from "./screens/EmployeeRejectedFairScreen";
 
 function App() {
+  // Global employee list
+  const [employees, setEmployees] = useState([]);
+
+  // Add new employee from EmployeeSetUpScreen
+  const addEmployee = (employee) => {
+    setEmployees((prev) => [...prev, { id: Date.now(), ...employee }]);
+  };
+
   return (
     <Router>
       <Routes>
+        {/* Public Screens */}
         <Route path="/" element={<HomeScreen />} />
         <Route path="/role" element={<RoleSelectScreen />} />
         <Route path="/login" element={<LoginScreen />} />
-        <Route path="/register" element={<RegisterScreen />} /> {/* ✅ NEW */}
+        <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
+        <Route path="/forgot-password/otp" element={<OTPVerificationScreen />} />
+        <Route path="/register" element={<RegisterScreen />} />
+
+        {/* Manager & Employee Dashboards */}
         <Route path="/dashboard/manager" element={<ManagerDashboardScreen />} />
         <Route path="/dashboard/employee" element={<EmployeeDashboardScreen />} />
-        <Route path="/employee-setup" element={<EmployeeSetUpScreen />} /> {/* ✅ Fixed */}
+
+        {/* Employee setup screen */}
+        <Route
+          path="/employee-setup"
+          element={<EmployeeSetUpScreen addEmployee={addEmployee} />}
+        />
+        
+<Route path="/employee-fairs-done" element={<EmployeeFairsDoneScreen />} />
+
+<Route path="/employee-rejected-fair" element={<EmployeeRejectedFairScreen />} />
       </Routes>
     </Router>
   );

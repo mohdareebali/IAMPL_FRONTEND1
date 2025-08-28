@@ -1,66 +1,115 @@
 // src/screens/RegisterScreen.js
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/Innovascape-logo.png"; // ✅ same logo as LoginScreen
 
 function RegisterScreen() {
+  const [companyName, setCompanyName] = useState("");
+  const [email, setEmail] = useState("");
+  const [companyId, setCompanyId] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   const handleRegister = () => {
-    // ✅ After register success, go to employee setup screen
-    navigate("/employee-setup");
+    if (companyName && email && companyId && password) {
+      navigate("/employee-setup");
+    } else {
+      alert("Please fill all fields");
+    }
+  };
+
+  const containerStyle = {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100vh",
+    background: "linear-gradient(to right, #e3f2fd, #bbdefb)", // ✅ same light gradient
+    fontFamily: "Arial, sans-serif",
+    textAlign: "center",
+  };
+
+  const headingStyle = {
+    color: "#0d47a1", // ✅ deep blue like Login
+    marginBottom: "20px",
+  };
+
+  const logoStyle = {
+    width: "150px",
+    marginBottom: "30px",
+    opacity: 0.9, // ✅ slightly darkened logo
+  };
+
+  const inputStyle = {
+    width: "280px",
+    padding: "12px",
+    margin: "10px 0",
+    border: "none",
+    borderRadius: "6px",
+    fontSize: "14px",
+    outline: "none",
+  };
+
+  const buttonStyle = {
+    width: "280px",
+    padding: "12px",
+    margin: "15px 0",
+    border: "none",
+    borderRadius: "6px",
+    backgroundColor: "white", // ✅ consistent with LoginScreen
+    color: "#007bff",
+    fontSize: "16px",
+    fontWeight: "bold",
+    cursor: "pointer",
+    transition: "0.3s",
   };
 
   return (
     <div style={containerStyle}>
-      <div style={cardStyle}>
-        <h2>Register</h2>
-        <input style={inputStyle} type="text" placeholder="Company Name" />
-        <input style={inputStyle} type="email" placeholder="Email" />
-        <input style={inputStyle} type="text" placeholder="Company ID" />
-        <input style={inputStyle} type="password" placeholder="Password" />
+      {/* ✅ Logo at top */}
+      <img src={logo} alt="Company Logo" style={logoStyle} />
 
-        <button style={btnStyle} onClick={handleRegister}>
-          Register
-        </button>
-      </div>
+      <h2 style={headingStyle}>Create Your Account</h2>
+
+      <input
+        style={inputStyle}
+        type="text"
+        placeholder="Company Name"
+        value={companyName}
+        onChange={(e) => setCompanyName(e.target.value)}
+      />
+      <input
+        style={inputStyle}
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <input
+        style={inputStyle}
+        type="text"
+        placeholder="Company ID"
+        value={companyId}
+        onChange={(e) => setCompanyId(e.target.value)}
+      />
+      <input
+        style={inputStyle}
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+
+      <button
+        style={buttonStyle}
+        onMouseOver={(e) => (e.target.style.backgroundColor = "#e6e6e6")}
+        onMouseOut={(e) => (e.target.style.backgroundColor = "white")}
+        onClick={handleRegister}
+      >
+        Register
+      </button>
     </div>
   );
 }
-
-const containerStyle = {
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  height: "100vh",
-  background: "#f1f5f9",
-};
-
-const cardStyle = {
-  width: "400px",
-  padding: "30px",
-  borderRadius: "12px",
-  background: "white",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-};
-
-const inputStyle = {
-  padding: "10px",
-  borderRadius: "8px",
-  border: "1px solid #ccc",
-  fontSize: "14px",
-  width: "100%",
-  marginBottom: "10px",
-};
-
-const btnStyle = {
-  padding: "12px",
-  background: "#2563eb",
-  color: "white",
-  border: "none",
-  borderRadius: "8px",
-  fontSize: "16px",
-  width: "100%",
-  cursor: "pointer",
-};
 
 export default RegisterScreen;
