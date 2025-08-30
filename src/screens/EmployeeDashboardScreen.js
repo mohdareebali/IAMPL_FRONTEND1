@@ -1,7 +1,10 @@
 // src/screens/EmployeeDashboardScreen.js
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 function EmployeeDashboardScreen() {
+    const navigate = useNavigate(); 
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
@@ -21,8 +24,8 @@ function EmployeeDashboardScreen() {
             Employee Menu
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-            <button style={menuBtnStyle}>Fairs in Progress</button>
-            <button style={menuBtnStyle}>Fairs Done</button>
+            <button style={menuBtnStyle} onClick={() => navigate("/employee-fairs-in-progress")}>FAIRs in Progress</button>
+            <button style={menuBtnStyle} onClick={() => navigate("/employee-fairs-done")}>FAIRs Done</button>
           </div>
         </div>
       )}

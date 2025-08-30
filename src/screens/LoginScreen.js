@@ -16,13 +16,13 @@ function LoginScreen() {
     justifyContent: "center",
     alignItems: "center",
     height: "100vh",
-    background: "linear-gradient(to right, #e3f2fd, #bbdefb)", // light blue gradient
+    background: "linear-gradient(to right, #e3f2fd, #bbdefb)",
     fontFamily: "Arial, sans-serif",
     textAlign: "center",
   };
 
   const headingStyle = {
-    color: "#0d47a1", // ✅ deep blue, contrasts well with light background
+    color: "#0d47a1",
     marginBottom: "20px",
   };
 
@@ -47,7 +47,7 @@ function LoginScreen() {
     margin: "15px 0",
     border: "none",
     borderRadius: "6px",
-    backgroundColor: "white", // ✅ button stands out
+    backgroundColor: "white",
     color: "#007bff",
     fontSize: "16px",
     fontWeight: "bold",
@@ -56,46 +56,56 @@ function LoginScreen() {
   };
 
   const linkStyle = {
-    color: "#1565c0", // ✅ darker medium blue, looks clickable
+    color: "#1565c0",
     textDecoration: "underline",
     cursor: "pointer",
     marginTop: "5px",
     display: "inline-block",
   };
 
+  // ✅ Updated handleLogin to support employee login
   const handleLogin = async () => {
-  if (!id || !password) {
-    alert("Please enter ID and Password");
-    return;
-  }
-
-  try {
-    const response = await fetch("http://localhost:5000/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, password }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      alert(data.message);
-
-      // ✅ Redirect based on role
-      if (role === "manager") {
-        navigate("/dashboard/manager", { state: { company: data.company } });
-      } else {
-        navigate("/dashboard/employee", { state: { company: data.company } });
-      }
-    } else {
-      alert(data.error);
+    if (!id || !password) {
+      alert("Please enter ID or Email and Password");
+      return;
     }
-  } catch (err) {
-    console.error("❌ Login error:", err);
-    alert("Something went wrong. Please try again.");
-  }
-};
 
+    try {
+      let endpoint = "";
+      let payload = {};
+
+      if (role === "manager") {
+        endpoint = "http://localhost:5000/api/login";
+        payload = { id, password }; // company login
+      } else {
+        endpoint = "http://localhost:5000/api/employees/login";
+        payload = { email: id, password }; // employee login using ID or email
+      }
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.message);
+
+        if (role === "manager") {
+          navigate("/dashboard/manager", { state: { company: data.company } });
+        } else {
+          navigate("/dashboard/employee", { state: { employee: data.employee } });
+        }
+      } else {
+        alert(data.error);
+      }
+    } catch (err) {
+      console.error("❌ Login error:", err);
+      alert("Something went wrong. Please try again.");
+    }
+  };
 
   const handleRegister = () => {
     if (role === "manager") {
@@ -111,18 +121,15 @@ function LoginScreen() {
 
   return (
     <div style={containerStyle}>
-      {/* ✅ Logo at top */}
       <img src={logo} alt="Company Logo" style={logoStyle} />
-
       <h2 style={headingStyle}>
-  Login as {role.charAt(0).toUpperCase() + role.slice(1)}
-</h2>
-
+        Login as {role.charAt(0).toUpperCase() + role.slice(1)}
+      </h2>
 
       <input
         style={inputStyle}
         type="text"
-        placeholder="Enter ID"
+        placeholder="Enter ID or Email"
         value={id}
         onChange={(e) => setId(e.target.value)}
       />
@@ -136,24 +143,18 @@ function LoginScreen() {
       <button
         style={buttonStyle}
         onClick={handleLogin}
-        onMouseOver={(e) => {
-          e.target.style.backgroundColor = "#e6e6e6";
-        }}
-        onMouseOut={(e) => {
-          e.target.style.backgroundColor = "white";
-        }}
+        onMouseOver={(e) => (e.target.style.backgroundColor = "#e6e6e6")}
+        onMouseOut={(e) => (e.target.style.backgroundColor = "white")}
       >
         Login
       </button>
 
-      {/* Forgot Password Link */}
       <p>
         <span style={linkStyle} onClick={handleForgotPassword}>
           Forgot Password?
         </span>
       </p>
 
-      {/* Register Link for manager */}
       {role === "manager" && (
         <p>
           Don’t have an account?{" "}

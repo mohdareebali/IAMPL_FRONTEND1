@@ -39,22 +39,21 @@ function ManagerDashboardScreen() {
             Manager Menu
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            <button style={menuBtnStyle}>📋 Create Employee</button>
+             <button
+                style={menuBtnStyle}
+                onClick={() => navigate("/employee-setup")}
+              >
+                Create Employee
+              </button>
             <button
               style={menuBtnStyle}
               onClick={() => navigate("/employee-fairs-done")} // ✅ navigate
             >
-              ✅ Fairs Done
+              FAIRs Done
             </button>
-            <button style={menuBtnStyle} onClick={() => navigate("/employee-fairs-in-progress")}>⏳ Fairs in Progress</button>
-            <button style={menuBtnStyle}>➕ New Fair</button>
-            <button
-              style={menuBtnStyle}
-              onClick={() => navigate("/employee-rejected-fair")} // ✅ new route
-            >
-              ❌ Rejected Fair
-            </button>
-            <button style={menuBtnStyle}>👥 Employee Info</button>
+            <button style={menuBtnStyle} onClick={() => navigate("/manager-fairs-in-progress")}>FAIRs in Progress</button>
+            <button style={menuBtnStyle}>New FAIR</button>
+            <button style={menuBtnStyle} onClick={() => navigate("/employee-info")}>Employee Info</button>
           </div>
         </div>
       )}
@@ -112,7 +111,7 @@ function ManagerDashboardScreen() {
             }}
           >
             <h2 style={{ marginBottom: "12px", color: "#1e293b" }}>
-              Welcome to the Manager Dashboard 👋
+              Welcome to the Manager Dashboard 
             </h2>
             <p style={{ color: "#475569", fontSize: "15px" }}>
               Select an option from the left menu to continue.
