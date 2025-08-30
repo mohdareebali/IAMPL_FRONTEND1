@@ -1,0 +1,47 @@
+1️⃣ MySQL Database Queries
+Create Database
+CREATE DATABASE innovascape;
+USE innovascape;
+
+Create Companies Table
+CREATE TABLE companies (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    company_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    company_id VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+Create Employees Table
+CREATE TABLE employees (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    employee_id VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    otp VARCHAR(10),
+    otp_expiry DATETIME,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+Insert Example Employee
+INSERT INTO employees (employee_id, email, password)
+VALUES ('EMP001', 'employee@example.com', 'StrongPass123!');
+
+Select Employees
+SELECT * FROM employees;
+
+Update Employee Password
+UPDATE employees
+SET password = 'NewStrongPassword123'
+WHERE employee_id = 'EMP001';
+
+Delete Employee
+DELETE FROM employees
+WHERE employee_id = 'EMP001';
+
+OTP Update
+UPDATE employees
+SET otp = '123456', otp_expiry = DATE_ADD(NOW(), INTERVAL 1 MINUTE)
+WHERE employee_id = 'EMP001';
+
