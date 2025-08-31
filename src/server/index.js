@@ -28,16 +28,33 @@ db.connect((err) => {
 });
 
 // ==============================
+// ⚠️ Fix database table if needed
+// ==============================
+// Run these once in MySQL if not already done:
+// ALTER TABLE companies CHANGE cornpany_id company_id VARCHAR(255);
+// ALTER TABLE companies ADD COLUMN otp VARCHAR(10);
+// ALTER TABLE companies ADD COLUMN otp_expiry DATETIME;
+
+// ==============================
+// 🚀 EMAIL TRANSPORTER
+// ==============================
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "aribali1804@gmail.com",
+    pass: "xpfp szcf fcjl grsw", // ⚠️ move to .env in production
+  },
+});
+
+// ==============================
 // 🚀 COMPANY ROUTES
 // ==============================
 app.post("/api/register", async (req, res) => {
   const { companyName, email, companyId, password } = req.body;
-  if (!companyName || !email || !companyId || !password) {
+  if (!companyName || !email || !companyId || !password)
     return res.status(400).json({ error: "All fields are required" });
-  }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-
   const sql =
     "INSERT INTO companies (company_name, email, company_id, password) VALUES (?, ?, ?, ?)";
   db.query(sql, [companyName, email, companyId, hashedPassword], (err, result) => {
@@ -76,7 +93,6 @@ app.post("/api/employees", async (req, res) => {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-
   const sql = "INSERT INTO employees (employee_id, email, password) VALUES (?, ?, ?)";
   db.query(sql, [employee_id, email, hashedPassword], (err) => {
     if (err) {
@@ -96,7 +112,6 @@ app.get("/api/employees", (req, res) => {
   });
 });
 
-// ✅ Employee login via ID or Email
 app.post("/api/employees/login", (req, res) => {
   const { employee_id, email, password } = req.body;
   if ((!employee_id && !email) || !password)
@@ -121,17 +136,6 @@ app.post("/api/employees/login", (req, res) => {
 });
 
 // ==============================
-// 🚀 EMAIL TRANSPORTER
-// ==============================
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: "aribali1804@gmail.com",
-    pass: "xpfp szcf fcjl grsw", // ⚠️ move to .env in production
-  },
-});
-
-// ==============================
 // 🚀 EMPLOYEE PASSWORD RESET WITH OTP
 // ==============================
 app.post("/api/employees/forgot-password", (req, res) => {
@@ -144,7 +148,7 @@ app.post("/api/employees/forgot-password", (req, res) => {
 
     const employeeEmail = results[0].email;
     const otp = Math.floor(100000 + Math.random() * 900000);
-    const otpExpiry = new Date(Date.now() + 1 * 60 * 1000);
+    const otpExpiry = new Date(Date.now() + 1 * 60 * 1000); // 1 minute
 
     db.query(
       "UPDATE employees SET otp=?, otp_expiry=? WHERE employee_id=?",
@@ -183,7 +187,8 @@ app.post("/api/employees/reset-password", async (req, res) => {
 
       const { otp: dbOtp, otp_expiry } = results[0];
       if (String(dbOtp) !== String(otp)) return res.status(400).json({ error: "Invalid OTP" });
-      if (new Date() > new Date(otp_expiry)) return res.status(400).json({ error: "OTP expired" });
+      if (!otp_expiry || new Date() > new Date(otp_expiry))
+        return res.status(400).json({ error: "OTP expired" });
 
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       db.query(
@@ -229,6 +234,75 @@ app.post("/api/employees/share", async (req, res) => {
     console.error("❌ Error sending credentials:", err);
     res.status(500).json({ error: "Failed to send email" });
   }
+});
+
+// ==============================
+// 🚀 MANAGER PASSWORD RESET WITH OTP (1 min expiry)
+// ==============================
+app.post("/api/manager/forgot-password", (req, res) => {
+  const { companyId } = req.body;
+  if (!companyId) return res.status(400).json({ error: "Company ID required" });
+
+  db.query("SELECT email FROM companies WHERE company_id=?", [companyId], async (err, results) => {
+    if (err) return res.status(500).json({ error: "Database error: " + err.message });
+    if (results.length === 0) return res.status(404).json({ error: "Company not found" });
+
+    const companyEmail = results[0].email;
+    const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
+    const otpExpiry = new Date(Date.now() + 1 * 60 * 1000); // 1 minute
+
+    db.query(
+      "UPDATE companies SET otp=?, otp_expiry=? WHERE company_id=?",
+      [otp, otpExpiry, companyId],
+      async (err2) => {
+        if (err2) return res.status(500).json({ error: "Database error: " + err2.message });
+
+        try {
+          await transporter.sendMail({
+            from: "aribali1804@gmail.com",
+            to: companyEmail,
+            subject: "OTP for Password Reset",
+            text: `Your OTP for password reset is ${otp}. It is valid for 1 minute.`,
+          });
+          res.json({ message: `✅ OTP sent to Company ID: ${companyId}` });
+        } catch (e) {
+          console.error(e);
+          res.status(500).json({ error: "Failed to send OTP" });
+        }
+      }
+    );
+  });
+});
+
+app.post("/api/manager/reset-password", async (req, res) => {
+  const { companyId, otp, newPassword } = req.body;
+  if (!companyId || !otp || !newPassword)
+    return res.status(400).json({ error: "All fields are required" });
+
+  db.query(
+    "SELECT otp, otp_expiry FROM companies WHERE company_id=?",
+    [companyId],
+    async (err, results) => {
+      if (err) return res.status(500).json({ error: "Database error: " + err.message });
+      if (results.length === 0) return res.status(404).json({ error: "Company not found" });
+
+      const { otp: dbOtp, otp_expiry } = results[0];
+
+      if (String(dbOtp) !== String(otp)) return res.status(400).json({ error: "Invalid OTP" });
+      if (!otp_expiry || new Date() > new Date(otp_expiry))
+        return res.status(400).json({ error: "OTP expired" });
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      db.query(
+        "UPDATE companies SET password=?, otp=NULL, otp_expiry=NULL WHERE company_id=?",
+        [hashedPassword, companyId],
+        (err2) => {
+          if (err2) return res.status(500).json({ error: "Database error: " + err2.message });
+          res.json({ message: "✅ Password updated successfully!" });
+        }
+      );
+    }
+  );
 });
 
 // ==============================

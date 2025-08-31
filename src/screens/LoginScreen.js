@@ -9,7 +9,8 @@ function LoginScreen() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const role = location.state?.role || "guest";
+  // Default to "employee" if role is missing
+  const role = location.state?.role || "employee";
 
   const containerStyle = {
     display: "flex",
@@ -54,7 +55,6 @@ function LoginScreen() {
     display: "inline-block",
   };
 
-  // ✅ Login handler supporting employee login via ID or email
   const handleLogin = async () => {
     if (!id || !password) {
       alert("Please enter ID or Email and Password");
@@ -67,15 +67,12 @@ function LoginScreen() {
 
       if (role === "manager") {
         endpoint = "http://localhost:5000/api/login";
-        payload = { id, password }; // company login
+        payload = { id, password };
       } else {
         endpoint = "http://localhost:5000/api/employees/login";
-        // Detect if input is email or employee_id
-        if (id.includes("@")) {
-          payload = { email: id, password };
-        } else {
-          payload = { employee_id: id, password };
-        }
+        payload = id.includes("@")
+          ? { email: id, password }
+          : { employee_id: id, password };
       }
 
       const response = await fetch(endpoint, {
@@ -88,7 +85,6 @@ function LoginScreen() {
 
       if (response.ok) {
         alert(data.message);
-
         if (role === "manager") {
           navigate("/dashboard/manager", { state: { company: data.company } });
         } else {
@@ -112,7 +108,11 @@ function LoginScreen() {
   };
 
   const handleForgotPassword = () => {
-    navigate("/forgot-password");
+    if (role === "manager") {
+      navigate("/manager-forgot", { state: { role: "manager" } });
+    } else {
+      navigate("/forgot-password", { state: { role: "employee" } });
+    }
   };
 
   return (

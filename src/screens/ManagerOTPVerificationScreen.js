@@ -1,12 +1,13 @@
+// src/screens/ManagerOTPVerificationScreen.js
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-function OTPVerificationScreen() {
+function ManagerOTPVerificationScreen() {
   const [otp, setOtp] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { employeeId } = location.state || {};
+  const { companyId, newPassword } = location.state || {};
 
   const containerStyle = {
     display: "flex",
@@ -46,33 +47,32 @@ function OTPVerificationScreen() {
     }
 
     try {
-      // Call your backend API to verify OTP and reset password
-      const response = await fetch("http://localhost:5000/api/employees/reset-password", {
+      // Call backend to verify OTP and reset password
+      const response = await fetch("http://localhost:5000/api/manager/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ employeeId, otp })
+        body: JSON.stringify({ companyId, otp, newPassword })
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        alert("OTP verified! You can now login with your new password.");
-
-        // Redirect to employee login
-        navigate("/login", { state: { role: "employee" } });
+        alert(data.message);
+        // Redirect to manager login after successful password reset
+        navigate("/login", { state: { role: "manager" } });
       } else {
-        alert(data.error || "OTP verification failed.");
+        alert(data.error || "OTP verification failed");
       }
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong. Please try again.");
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong!");
     }
   };
 
   return (
     <div style={containerStyle}>
-      <h2>Enter OTP</h2>
-      <p>We sent an OTP to Employee ID: <strong>{employeeId}</strong></p>
+      <h2>Manager OTP Verification</h2>
+      <p>We sent an OTP to Company ID: <strong>{companyId}</strong></p>
       <input
         style={inputStyle}
         type="text"
@@ -93,4 +93,4 @@ function OTPVerificationScreen() {
   );
 }
 
-export default OTPVerificationScreen;
+export default ManagerOTPVerificationScreen;

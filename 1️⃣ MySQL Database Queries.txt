@@ -45,3 +45,7 @@ UPDATE employees
 SET otp = '123456', otp_expiry = DATE_ADD(NOW(), INTERVAL 1 MINUTE)
 WHERE employee_id = 'EMP001';
 
+ALTER TABLE companies
+ADD COLUMN otp VARCHAR(10),
+ADD COLUMN otp_expiry DATETIME;
+

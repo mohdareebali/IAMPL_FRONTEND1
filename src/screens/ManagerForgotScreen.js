@@ -1,11 +1,11 @@
-// src/screens/ForgotPasswordScreen.js
+// src/screens/ManagerForgotScreen.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/Innovascape-logo.png";
 import axios from "axios";
 
-function ForgotPasswordScreen() {
-  const [employeeId, setEmployeeId] = useState("");
+function ManagerForgotScreen() {
+  const [companyId, setCompanyId] = useState("");
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -60,24 +60,23 @@ function ForgotPasswordScreen() {
     return regex.test(password);
   };
 
+  // Step 1: Send OTP
   const handleSendOtp = async () => {
-    if (!employeeId) return alert("Please enter your Employee ID");
+    if (!companyId) return alert("Please enter your Company ID");
     if (!email) return alert("Please enter your email");
     if (newPassword !== confirmPassword) return alert("Passwords do not match");
     if (!isStrongPassword(newPassword)) {
-      return alert(
-        "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character (!@#$%^&*)"
-      );
+      return alert("Password must be at least 8 characters long and include uppercase, lowercase, number, and special character (!@#$%^&*)");
     }
 
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/employees/forgot-password", {
-        employee_id: employeeId,
-        email: email,
+      const response = await axios.post("http://localhost:5000/api/manager/forgot-password", {
+        companyId,
+        email,
       });
       alert(response.data.message);
-      setStep(2); // Move to OTP verification step
+      setStep(2); // Move to OTP verification
     } catch (error) {
       console.error(error);
       alert(error.response?.data?.error || "Something went wrong.");
@@ -86,23 +85,23 @@ function ForgotPasswordScreen() {
     }
   };
 
+  // Step 2: Verify OTP & Reset Password
   const handleVerifyOtp = async () => {
     if (!otp) return alert("Please enter OTP");
+
     if (!isStrongPassword(newPassword)) {
-      return alert(
-        "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character (!@#$%^&*)"
-      );
+      return alert("Password must be at least 8 characters long and include uppercase, lowercase, number, and special character (!@#$%^&*)");
     }
 
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/employees/reset-password", {
-        employee_id: employeeId,
+      const response = await axios.post("http://localhost:5000/api/manager/reset-password", {
+        companyId,
         otp,
         newPassword,
       });
       alert(response.data.message);
-      navigate("/login", { state: { role: "employee" } }); // Redirect to employee login
+      navigate("/login", { state: { role: "manager" } }); // Redirect to manager login
     } catch (error) {
       console.error(error);
       alert(error.response?.data?.error || "Something went wrong.");
@@ -121,9 +120,9 @@ function ForgotPasswordScreen() {
           <input
             style={inputStyle}
             type="text"
-            placeholder="Enter Employee ID"
-            value={employeeId}
-            onChange={(e) => setEmployeeId(e.target.value)}
+            placeholder="Enter Company ID"
+            value={companyId}
+            onChange={(e) => setCompanyId(e.target.value)}
           />
           <input
             style={inputStyle}
@@ -177,4 +176,4 @@ function ForgotPasswordScreen() {
   );
 }
 
-export default ForgotPasswordScreen;
+export default ManagerForgotScreen;
