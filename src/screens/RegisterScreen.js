@@ -1,7 +1,7 @@
 // src/screens/RegisterScreen.js
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import logo from "../assets/Innovascape-logo.png"; // ✅ same logo as LoginScreen
+import logo from "../assets/Innovascape-logo.png"; // same logo as LoginScreen
 
 function RegisterScreen() {
   const [companyName, setCompanyName] = useState("");
@@ -10,10 +10,21 @@ function RegisterScreen() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  // ✅ Register Handler (calls backend API)
+  // ✅ Strong password regex: min 8 chars, at least 1 uppercase, 1 lowercase, 1 number, 1 special char
+  const isStrongPassword = (pwd) => {
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(pwd);
+  };
+
   const handleRegister = async () => {
     if (!companyName || !email || !companyId || !password) {
       alert("Please fill all fields");
+      return;
+    }
+
+    if (!isStrongPassword(password)) {
+      alert(
+        "Password must be at least 8 characters long and include:\n- Uppercase letter\n- Lowercase letter\n- Number\n- Special character (@$!%*?&)"
+      );
       return;
     }
 
@@ -87,9 +98,7 @@ function RegisterScreen() {
 
   return (
     <div style={containerStyle}>
-      {/* ✅ Logo */}
       <img src={logo} alt="Company Logo" style={logoStyle} />
-
       <h2 style={headingStyle}>Create Your Account</h2>
 
       <input

@@ -20,7 +20,7 @@ function EmployeeSetupScreen() {
   });
   const navigate = useNavigate();
 
-  // ✅ Fetch existing employees from backend
+  // Fetch existing employees from backend
   useEffect(() => {
     fetch("http://localhost:5000/api/employees")
       .then((res) => res.json())
@@ -38,7 +38,7 @@ function EmployeeSetupScreen() {
     }
   };
 
-  // ✅ Add employee to backend database
+  // Add employee to backend database
   const handleAdd = async () => {
     if (!newEmployee.employee_id || !newEmployee.email || !newEmployee.password) {
       alert("Please fill all fields and generate password");
@@ -46,10 +46,13 @@ function EmployeeSetupScreen() {
     }
 
     try {
+      // Store plain password to send via email
+      const employeePayload = { ...newEmployee };
+
       const res = await fetch("http://localhost:5000/api/employees", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newEmployee),
+        body: JSON.stringify(employeePayload),
       });
 
       const data = await res.json();
@@ -58,7 +61,7 @@ function EmployeeSetupScreen() {
         alert(data.message);
         setEmployees([
           ...employees,
-          { ...newEmployee, created_at: new Date() },
+          { ...employeePayload, created_at: new Date() },
         ]);
         setNewEmployee({ employee_id: "", email: "", password: "" });
       } else {
@@ -70,10 +73,31 @@ function EmployeeSetupScreen() {
     }
   };
 
-  const handleShare = (emp) => {
-    alert(
-      `Shared credentials:\nID: ${emp.employee_id}\nPassword: ${emp.password}\nSent to: ${emp.email}`
-    );
+  // Share credentials via backend (sends email with plain password)
+  const handleShare = async (emp) => {
+    try {
+      const payload = {
+        employee_id: emp.employee_id,
+        email: emp.email,
+        password: emp.password, // Use plain password
+      };
+
+      const res = await fetch("http://localhost:5000/api/employees/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message);
+      } else {
+        alert(data.error || "Failed to send email");
+      }
+    } catch (err) {
+      console.error("❌ Error sharing credentials:", err);
+      alert("Server error, please try again");
+    }
   };
 
   return (
@@ -133,7 +157,7 @@ function EmployeeSetupScreen() {
   );
 }
 
-// ==== Styles (unchanged) ====
+// ==== Styles ====
 const containerStyle = {
   display: "flex",
   flexDirection: "column",

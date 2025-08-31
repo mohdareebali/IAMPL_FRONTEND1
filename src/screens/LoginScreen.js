@@ -1,6 +1,7 @@
+// src/screens/LoginScreen.js
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import logo from "../assets/Innovascape-logo.png"; // ✅ update path to your logo
+import logo from "../assets/Innovascape-logo.png"; // Update path to your logo
 
 function LoginScreen() {
   const [id, setId] = useState("");
@@ -21,16 +22,8 @@ function LoginScreen() {
     textAlign: "center",
   };
 
-  const headingStyle = {
-    color: "#0d47a1",
-    marginBottom: "20px",
-  };
-
-  const logoStyle = {
-    width: "150px",
-    marginBottom: "30px",
-  };
-
+  const headingStyle = { color: "#0d47a1", marginBottom: "20px" };
+  const logoStyle = { width: "150px", marginBottom: "30px" };
   const inputStyle = {
     width: "280px",
     padding: "12px",
@@ -40,7 +33,6 @@ function LoginScreen() {
     fontSize: "14px",
     outline: "none",
   };
-
   const buttonStyle = {
     width: "280px",
     padding: "12px",
@@ -54,7 +46,6 @@ function LoginScreen() {
     cursor: "pointer",
     transition: "0.3s",
   };
-
   const linkStyle = {
     color: "#1565c0",
     textDecoration: "underline",
@@ -63,7 +54,7 @@ function LoginScreen() {
     display: "inline-block",
   };
 
-  // ✅ Updated handleLogin to support employee login
+  // ✅ Login handler supporting employee login via ID or email
   const handleLogin = async () => {
     if (!id || !password) {
       alert("Please enter ID or Email and Password");
@@ -79,7 +70,12 @@ function LoginScreen() {
         payload = { id, password }; // company login
       } else {
         endpoint = "http://localhost:5000/api/employees/login";
-        payload = { email: id, password }; // employee login using ID or email
+        // Detect if input is email or employee_id
+        if (id.includes("@")) {
+          payload = { email: id, password };
+        } else {
+          payload = { employee_id: id, password };
+        }
       }
 
       const response = await fetch(endpoint, {
@@ -99,7 +95,7 @@ function LoginScreen() {
           navigate("/dashboard/employee", { state: { employee: data.employee } });
         }
       } else {
-        alert(data.error);
+        alert(data.error || "Invalid credentials");
       }
     } catch (err) {
       console.error("❌ Login error:", err);
@@ -140,6 +136,7 @@ function LoginScreen() {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
+
       <button
         style={buttonStyle}
         onClick={handleLogin}
