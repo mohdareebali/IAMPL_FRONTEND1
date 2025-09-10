@@ -70,9 +70,7 @@ function LoginScreen() {
         payload = { id, password };
       } else {
         endpoint = "http://localhost:5000/api/employees/login";
-        payload = id.includes("@")
-          ? { email: id, password }
-          : { employee_id: id, password };
+        payload = { identifier: id, password }; // <--- use `identifier`
       }
 
       const response = await fetch(endpoint, {

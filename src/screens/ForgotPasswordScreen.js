@@ -5,8 +5,7 @@ import logo from "../assets/Innovascape-logo.png";
 import axios from "axios";
 
 function ForgotPasswordScreen() {
-  const [employeeId, setEmployeeId] = useState("");
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState(""); // Employee ID or Email
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [otp, setOtp] = useState("");
@@ -60,24 +59,21 @@ function ForgotPasswordScreen() {
     return regex.test(password);
   };
 
+  // Step 1: Send OTP
   const handleSendOtp = async () => {
-    if (!employeeId) return alert("Please enter your Employee ID");
-    if (!email) return alert("Please enter your email");
+    if (!identifier) return alert("Please enter your Employee ID or Email");
     if (newPassword !== confirmPassword) return alert("Passwords do not match");
     if (!isStrongPassword(newPassword)) {
-      return alert(
-        "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character (!@#$%^&*)"
-      );
+      return alert("Password must be at least 8 characters long and include uppercase, lowercase, number, and special character (!@#$%^&*)");
     }
 
     setLoading(true);
     try {
       const response = await axios.post("http://localhost:5000/api/employees/forgot-password", {
-        employee_id: employeeId,
-        email: email,
+        identifier, // Send as single identifier
       });
       alert(response.data.message);
-      setStep(2); // Move to OTP verification step
+      setStep(2); // Move to OTP verification
     } catch (error) {
       console.error(error);
       alert(error.response?.data?.error || "Something went wrong.");
@@ -86,18 +82,17 @@ function ForgotPasswordScreen() {
     }
   };
 
+  // Step 2: Verify OTP & Reset Password
   const handleVerifyOtp = async () => {
     if (!otp) return alert("Please enter OTP");
     if (!isStrongPassword(newPassword)) {
-      return alert(
-        "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character (!@#$%^&*)"
-      );
+      return alert("Password must be at least 8 characters long and include uppercase, lowercase, number, and special character (!@#$%^&*)");
     }
 
     setLoading(true);
     try {
       const response = await axios.post("http://localhost:5000/api/employees/reset-password", {
-        employee_id: employeeId,
+        identifier,
         otp,
         newPassword,
       });
@@ -121,16 +116,9 @@ function ForgotPasswordScreen() {
           <input
             style={inputStyle}
             type="text"
-            placeholder="Enter Employee ID"
-            value={employeeId}
-            onChange={(e) => setEmployeeId(e.target.value)}
-          />
-          <input
-            style={inputStyle}
-            type="email"
-            placeholder="Enter Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter Employee ID or Email"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
           />
           <input
             style={inputStyle}

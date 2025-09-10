@@ -16,12 +16,14 @@ import EmployeeDashboardScreen from "./screens/EmployeeDashboardScreen";
 import EmployeeSetUpScreen from "./screens/EmployeeSetUpScreen";
 import EmployeeFairsDoneScreen from "./screens/EmployeeFairsDoneScreen";
 import EmployeeRejectedFairScreen from "./screens/EmployeeRejectedFairScreen";
+import EmployeeInfoScreen from "./screens/EmployeeInfoScreen";
 
 function App() {
   return (
     <Router>
       <Routes>
         {/* Public Screens */}
+        <Route path="/employee-info" element={<EmployeeInfoScreen />} />
         <Route path="/" element={<HomeScreen />} />
         <Route path="/role" element={<RoleSelectScreen />} />
         <Route path="/login" element={<LoginScreen />} />

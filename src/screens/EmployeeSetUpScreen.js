@@ -17,6 +17,7 @@ function EmployeeSetupScreen() {
     employee_id: "",
     email: "",
     password: "",
+    company_id: "", // ✅ Added company_id
   });
   const navigate = useNavigate();
 
@@ -40,8 +41,13 @@ function EmployeeSetupScreen() {
 
   // Add employee to backend database
   const handleAdd = async () => {
-    if (!newEmployee.employee_id || !newEmployee.email || !newEmployee.password) {
-      alert("Please fill all fields and generate password");
+    if (
+      !newEmployee.employee_id ||
+      !newEmployee.email ||
+      !newEmployee.password ||
+      !newEmployee.company_id
+    ) {
+      alert("Please fill all fields including Company ID and generate password");
       return;
     }
 
@@ -63,7 +69,7 @@ function EmployeeSetupScreen() {
           ...employees,
           { ...employeePayload, created_at: new Date() },
         ]);
-        setNewEmployee({ employee_id: "", email: "", password: "" });
+        setNewEmployee({ employee_id: "", email: "", password: "", company_id: "" });
       } else {
         alert(data.error || "Failed to add employee");
       }
@@ -124,6 +130,14 @@ function EmployeeSetupScreen() {
       <input
         style={inputStyle}
         type="text"
+        name="company_id"
+        placeholder="Company ID"
+        value={newEmployee.company_id}
+        onChange={handleChange}
+      />
+      <input
+        style={inputStyle}
+        type="text"
         placeholder="Generated Password"
         value={newEmployee.password}
         readOnly
@@ -139,6 +153,7 @@ function EmployeeSetupScreen() {
           <div key={index} style={empCard}>
             <p><b>ID:</b> {emp.employee_id}</p>
             <p><b>Email:</b> {emp.email}</p>
+            <p><b>Company ID:</b> {emp.company_id}</p>
             <p><b>Password:</b> {emp.password}</p>
             <button style={shareBtn} onClick={() => handleShare(emp)}>
               📤 Share

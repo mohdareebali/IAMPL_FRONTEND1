@@ -5,8 +5,7 @@ import logo from "../assets/Innovascape-logo.png";
 import axios from "axios";
 
 function ManagerForgotScreen() {
-  const [companyId, setCompanyId] = useState("");
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState(""); // Either Company ID or Email
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [otp, setOtp] = useState("");
@@ -62,8 +61,7 @@ function ManagerForgotScreen() {
 
   // Step 1: Send OTP
   const handleSendOtp = async () => {
-    if (!companyId) return alert("Please enter your Company ID");
-    if (!email) return alert("Please enter your email");
+    if (!identifier) return alert("Please enter Company ID or Email");
     if (newPassword !== confirmPassword) return alert("Passwords do not match");
     if (!isStrongPassword(newPassword)) {
       return alert("Password must be at least 8 characters long and include uppercase, lowercase, number, and special character (!@#$%^&*)");
@@ -72,8 +70,7 @@ function ManagerForgotScreen() {
     setLoading(true);
     try {
       const response = await axios.post("http://localhost:5000/api/manager/forgot-password", {
-        companyId,
-        email,
+        identifier, // Send as identifier
       });
       alert(response.data.message);
       setStep(2); // Move to OTP verification
@@ -96,7 +93,7 @@ function ManagerForgotScreen() {
     setLoading(true);
     try {
       const response = await axios.post("http://localhost:5000/api/manager/reset-password", {
-        companyId,
+        identifier,
         otp,
         newPassword,
       });
@@ -120,16 +117,9 @@ function ManagerForgotScreen() {
           <input
             style={inputStyle}
             type="text"
-            placeholder="Enter Company ID"
-            value={companyId}
-            onChange={(e) => setCompanyId(e.target.value)}
-          />
-          <input
-            style={inputStyle}
-            type="email"
-            placeholder="Enter Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter Company ID or Email"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
           />
           <input
             style={inputStyle}

@@ -3,7 +3,6 @@ const mysql = require("mysql2");
 const express = require("express");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
-const bcrypt = require("bcryptjs"); // For password hashing
 
 const app = express();
 app.use(cors());
@@ -28,36 +27,27 @@ db.connect((err) => {
 });
 
 // ==============================
-// ⚠️ Fix database table if needed
-// ==============================
-// Run these once in MySQL if not already done:
-// ALTER TABLE companies CHANGE cornpany_id company_id VARCHAR(255);
-// ALTER TABLE companies ADD COLUMN otp VARCHAR(10);
-// ALTER TABLE companies ADD COLUMN otp_expiry DATETIME;
-
-// ==============================
 // 🚀 EMAIL TRANSPORTER
 // ==============================
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: "aribali1804@gmail.com",
-    pass: "xpfp szcf fcjl grsw", // ⚠️ move to .env in production
+    pass: "xpfp szcf fcjl grsw",
   },
 });
 
 // ==============================
 // 🚀 COMPANY ROUTES
 // ==============================
-app.post("/api/register", async (req, res) => {
+app.post("/api/register", (req, res) => {
   const { companyName, email, companyId, password } = req.body;
   if (!companyName || !email || !companyId || !password)
     return res.status(400).json({ error: "All fields are required" });
 
-  const hashedPassword = await bcrypt.hash(password, 10);
   const sql =
     "INSERT INTO companies (company_name, email, company_id, password) VALUES (?, ?, ?, ?)";
-  db.query(sql, [companyName, email, companyId, hashedPassword], (err, result) => {
+  db.query(sql, [companyName, email, companyId, password], (err, result) => {
     if (err) {
       console.error("❌ Error inserting company:", err);
       return res.status(500).json({ error: "Database error: " + err.message });
@@ -71,13 +61,12 @@ app.post("/api/login", (req, res) => {
   if (!id || !password) return res.status(400).json({ error: "ID and Password required" });
 
   const sql = "SELECT * FROM companies WHERE company_id=? OR email=?";
-  db.query(sql, [id, id], async (err, results) => {
+  db.query(sql, [id, id], (err, results) => {
     if (err) return res.status(500).json({ error: "Database error: " + err.message });
     if (results.length === 0) return res.status(401).json({ error: "Invalid credentials" });
 
     const company = results[0];
-    const match = await bcrypt.compare(password, company.password);
-    if (!match) return res.status(401).json({ error: "Invalid credentials" });
+    if (password !== company.password) return res.status(401).json({ error: "Invalid credentials" });
 
     res.json({ message: "✅ Login successful!", company });
   });
@@ -86,51 +75,59 @@ app.post("/api/login", (req, res) => {
 // ==============================
 // 🚀 EMPLOYEE ROUTES
 // ==============================
-app.post("/api/employees", async (req, res) => {
-  const { employee_id, email, password } = req.body;
-  if (!employee_id || !email || !password) {
-    return res.status(400).json({ error: "Employee ID, Email, and Password required" });
-  }
+app.post("/api/employees", (req, res) => {
+  const { employee_id, email, password, company_id } = req.body;
+  if (!employee_id || !email || !password || !company_id)
+    return res.status(400).json({ error: "Employee ID, Email, Password, and Company ID required" });
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const sql = "INSERT INTO employees (employee_id, email, password) VALUES (?, ?, ?)";
-  db.query(sql, [employee_id, email, hashedPassword], (err) => {
-    if (err) {
-      console.error("❌ Error adding employee:", err);
-      return res.status(500).json({ error: "Database error: " + err.message });
-    }
-    res.json({ message: "✅ Employee added successfully!", employeeId: employee_id });
+  // check company exists
+  db.query("SELECT * FROM companies WHERE company_id=?", [company_id], (err, results) => {
+    if (err) return res.status(500).json({ error: "Database error: " + err.message });
+    if (results.length === 0) return res.status(400).json({ error: "❌ Invalid Company ID" });
+
+    const sql =
+      "INSERT INTO employees (employee_id, email, password, company_id, created_at) VALUES (?, ?, ?, ?, NOW())";
+    db.query(sql, [employee_id, email, password, company_id], (err2) => {
+      if (err2) return res.status(500).json({ error: "Database error: " + err2.message });
+      res.json({ message: "✅ Employee added successfully!", employeeId: employee_id });
+    });
   });
 });
 
+// ==============================
+// ✅ GET ALL EMPLOYEES (FOR EMPLOYEE INFO SCREEN)
+// ==============================
 app.get("/api/employees", (req, res) => {
-  const sql =
-    "SELECT employee_id, email, password, created_at FROM employees ORDER BY created_at DESC";
+  const sql = "SELECT employee_id, email, company_id, password, created_at, password_changed_at FROM employees";
   db.query(sql, (err, results) => {
     if (err) return res.status(500).json({ error: "Database error: " + err.message });
     res.json(results);
   });
 });
 
+// ==============================
+// 🚀 EMPLOYEE LOGIN (ID or Email)
+// ==============================
 app.post("/api/employees/login", (req, res) => {
-  const { employee_id, email, password } = req.body;
-  if ((!employee_id && !email) || !password)
+  const { identifier, password } = req.body;
+
+  if (!identifier || !password)
     return res.status(400).json({ error: "Employee ID or Email and Password required" });
 
-  const sql = employee_id
-    ? "SELECT * FROM employees WHERE employee_id=?"
-    : "SELECT * FROM employees WHERE email=?";
-  const params = employee_id ? [employee_id] : [email];
-
-  db.query(sql, params, async (err, results) => {
+  const sql = "SELECT * FROM employees WHERE employee_id=? OR email=?";
+  db.query(sql, [identifier, identifier], (err, results) => {
     if (err) return res.status(500).json({ error: "Database error: " + err.message });
-    if (results.length === 0) return res.status(401).json({ error: "Invalid credentials" });
+
+    if (results.length === 0)
+      return res.status(401).json({ error: "Invalid credentials" });
 
     const employee = results[0];
-    const match = await bcrypt.compare(password, employee.password);
-    if (!match) return res.status(401).json({ error: "Invalid credentials" });
+
+    if (password !== employee.password)
+      return res.status(401).json({ error: "Invalid credentials" });
 
     const { password: _, otp, otp_expiry, ...empData } = employee;
+
     res.json({ message: "✅ Employee login successful!", employee: empData });
   });
 });
@@ -139,20 +136,22 @@ app.post("/api/employees/login", (req, res) => {
 // 🚀 EMPLOYEE PASSWORD RESET WITH OTP
 // ==============================
 app.post("/api/employees/forgot-password", (req, res) => {
-  const { employee_id } = req.body;
-  if (!employee_id) return res.status(400).json({ error: "Employee ID required" });
+  const { identifier } = req.body;
+  if (!identifier) return res.status(400).json({ error: "Employee ID or Email required" });
 
-  db.query("SELECT email FROM employees WHERE employee_id=?", [employee_id], async (err, results) => {
+  const sql = "SELECT email, employee_id FROM employees WHERE employee_id=? OR email=?";
+  db.query(sql, [identifier, identifier], async (err, results) => {
     if (err) return res.status(500).json({ error: "Database error: " + err.message });
     if (results.length === 0) return res.status(404).json({ error: "Employee not found" });
 
     const employeeEmail = results[0].email;
+    const employeeId = results[0].employee_id;
     const otp = Math.floor(100000 + Math.random() * 900000);
     const otpExpiry = new Date(Date.now() + 1 * 60 * 1000); // 1 minute
 
     db.query(
       "UPDATE employees SET otp=?, otp_expiry=? WHERE employee_id=?",
-      [otp, otpExpiry, employee_id],
+      [otp, otpExpiry, employeeId],
       async (err2) => {
         if (err2) return res.status(500).json({ error: "Database error: " + err2.message });
 
@@ -163,7 +162,7 @@ app.post("/api/employees/forgot-password", (req, res) => {
             subject: "OTP for Password Reset",
             text: `Your OTP for password reset is ${otp}. It is valid for 1 minute.`,
           });
-          res.json({ message: `✅ OTP sent to Employee ID: ${employee_id}` });
+          res.json({ message: `✅ OTP sent to Employee: ${employeeId}` });
         } catch (e) {
           console.error(e);
           res.status(500).json({ error: "Failed to send OTP" });
@@ -173,34 +172,31 @@ app.post("/api/employees/forgot-password", (req, res) => {
   });
 });
 
-app.post("/api/employees/reset-password", async (req, res) => {
-  const { employee_id, otp, newPassword } = req.body;
-  if (!employee_id || !otp || !newPassword)
+app.post("/api/employees/reset-password", (req, res) => {
+  const { identifier, otp, newPassword } = req.body;
+  if (!identifier || !otp || !newPassword)
     return res.status(400).json({ error: "All fields are required" });
 
-  db.query(
-    "SELECT otp, otp_expiry FROM employees WHERE employee_id=?",
-    [employee_id],
-    async (err, results) => {
-      if (err) return res.status(500).json({ error: "Database error: " + err.message });
-      if (results.length === 0) return res.status(404).json({ error: "Employee not found" });
+  const sql = "SELECT employee_id, otp, otp_expiry FROM employees WHERE employee_id=? OR email=?";
+  db.query(sql, [identifier, identifier], (err, results) => {
+    if (err) return res.status(500).json({ error: "Database error: " + err.message });
+    if (results.length === 0) return res.status(404).json({ error: "Employee not found" });
 
-      const { otp: dbOtp, otp_expiry } = results[0];
-      if (String(dbOtp) !== String(otp)) return res.status(400).json({ error: "Invalid OTP" });
-      if (!otp_expiry || new Date() > new Date(otp_expiry))
-        return res.status(400).json({ error: "OTP expired" });
+    const { employee_id, otp: dbOtp, otp_expiry } = results[0];
 
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      db.query(
-        "UPDATE employees SET password=?, otp=NULL, otp_expiry=NULL WHERE employee_id=?",
-        [hashedPassword, employee_id],
-        (err2) => {
-          if (err2) return res.status(500).json({ error: "Database error: " + err2.message });
-          res.json({ message: "✅ Password updated successfully!" });
-        }
-      );
-    }
-  );
+    if (String(dbOtp) !== String(otp)) return res.status(400).json({ error: "Invalid OTP" });
+    if (!otp_expiry || new Date() > new Date(otp_expiry))
+      return res.status(400).json({ error: "OTP expired" });
+
+    db.query(
+      "UPDATE employees SET password=?, otp=NULL, otp_expiry=NULL, password_changed_at=NOW() WHERE employee_id=?",
+      [newPassword, employee_id],
+      (err2) => {
+        if (err2) return res.status(500).json({ error: "Database error: " + err2.message });
+        res.json({ message: "✅ Password updated successfully!" });
+      }
+    );
+  });
 });
 
 // ==============================
@@ -274,7 +270,7 @@ app.post("/api/manager/forgot-password", (req, res) => {
   });
 });
 
-app.post("/api/manager/reset-password", async (req, res) => {
+app.post("/api/manager/reset-password", (req, res) => {
   const { companyId, otp, newPassword } = req.body;
   if (!companyId || !otp || !newPassword)
     return res.status(400).json({ error: "All fields are required" });
@@ -282,7 +278,7 @@ app.post("/api/manager/reset-password", async (req, res) => {
   db.query(
     "SELECT otp, otp_expiry FROM companies WHERE company_id=?",
     [companyId],
-    async (err, results) => {
+    (err, results) => {
       if (err) return res.status(500).json({ error: "Database error: " + err.message });
       if (results.length === 0) return res.status(404).json({ error: "Company not found" });
 
@@ -292,10 +288,9 @@ app.post("/api/manager/reset-password", async (req, res) => {
       if (!otp_expiry || new Date() > new Date(otp_expiry))
         return res.status(400).json({ error: "OTP expired" });
 
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
       db.query(
         "UPDATE companies SET password=?, otp=NULL, otp_expiry=NULL WHERE company_id=?",
-        [hashedPassword, companyId],
+        [newPassword, companyId],
         (err2) => {
           if (err2) return res.status(500).json({ error: "Database error: " + err2.message });
           res.json({ message: "✅ Password updated successfully!" });
