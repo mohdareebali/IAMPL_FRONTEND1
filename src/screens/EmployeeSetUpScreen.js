@@ -21,13 +21,21 @@ function EmployeeSetupScreen() {
   });
   const navigate = useNavigate();
 
-  // Fetch existing employees from backend
+  // Fetch employees by company_id
   useEffect(() => {
-    fetch("http://localhost:5000/api/employees")
+    if (!newEmployee.company_id) return; // wait until company_id is entered
+
+    fetch(`http://localhost:5000/api/employees/${newEmployee.company_id}`)
       .then((res) => res.json())
-      .then((data) => setEmployees(data))
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setEmployees(data);
+        } else {
+          setEmployees([]);
+        }
+      })
       .catch((err) => console.error("❌ Error fetching employees:", err));
-  }, []);
+  }, [newEmployee.company_id]); // 🔑 fetch when company_id changes
 
   const handleChange = (e) => {
     setNewEmployee({ ...newEmployee, [e.target.name]: e.target.value });
@@ -52,7 +60,6 @@ function EmployeeSetupScreen() {
     }
 
     try {
-      // Store plain password to send via email
       const employeePayload = { ...newEmployee };
 
       const res = await fetch("http://localhost:5000/api/employees", {
@@ -65,11 +72,16 @@ function EmployeeSetupScreen() {
 
       if (res.ok) {
         alert(data.message);
-        setEmployees([
-          ...employees,
+        setEmployees((prev) => [
+          ...prev,
           { ...employeePayload, created_at: new Date() },
         ]);
-        setNewEmployee({ employee_id: "", email: "", password: "", company_id: "" });
+        setNewEmployee({
+          employee_id: "",
+          email: "",
+          password: "",
+          company_id: newEmployee.company_id, // keep same company_id for new entries
+        });
       } else {
         alert(data.error || "Failed to add employee");
       }
@@ -79,13 +91,13 @@ function EmployeeSetupScreen() {
     }
   };
 
-  // Share credentials via backend (sends email with plain password)
+  // Share credentials via backend
   const handleShare = async (emp) => {
     try {
       const payload = {
         employee_id: emp.employee_id,
         email: emp.email,
-        password: emp.password, // Use plain password
+        password: emp.password,
       };
 
       const res = await fetch("http://localhost:5000/api/employees/share", {
@@ -148,18 +160,22 @@ function EmployeeSetupScreen() {
       </button>
 
       <div style={{ marginTop: "20px", width: "100%", maxWidth: "500px" }}>
-        <h3 style={listHeading}>Employee List</h3>
-        {employees.map((emp, index) => (
-          <div key={index} style={empCard}>
-            <p><b>ID:</b> {emp.employee_id}</p>
-            <p><b>Email:</b> {emp.email}</p>
-            <p><b>Company ID:</b> {emp.company_id}</p>
-            <p><b>Password:</b> {emp.password}</p>
-            <button style={shareBtn} onClick={() => handleShare(emp)}>
-              📤 Share
-            </button>
-          </div>
-        ))}
+        <h3 style={listHeading}>Employee List (Filtered by Company)</h3>
+        {employees.length === 0 ? (
+          <p>No employees found for this company.</p>
+        ) : (
+          employees.map((emp, index) => (
+            <div key={index} style={empCard}>
+              <p><b>ID:</b> {emp.employee_id}</p>
+              <p><b>Email:</b> {emp.email}</p>
+              <p><b>Company ID:</b> {emp.company_id}</p>
+              <p><b>Password:</b> {emp.password}</p>
+              <button style={shareBtn} onClick={() => handleShare(emp)}>
+                📤 Share
+              </button>
+            </div>
+          ))
+        )}
       </div>
 
       <button

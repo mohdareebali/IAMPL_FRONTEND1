@@ -8,7 +8,16 @@ function EmployeeInfoScreen() {
   useEffect(() => {
     fetch("http://localhost:5000/api/employees")
       .then((res) => res.json())
-      .then((data) => setEmployees(data))
+      .then((data) => {
+        // ✅ Ensure data is always an array
+        if (Array.isArray(data)) {
+          setEmployees(data);
+        } else if (data) {
+          setEmployees([data]); // wrap single object in array
+        } else {
+          setEmployees([]); // fallback empty
+        }
+      })
       .catch((err) => console.error("❌ Error fetching employees:", err));
   }, []);
 
@@ -43,6 +52,7 @@ function EmployeeInfoScreen() {
               <p><b>ID:</b> {emp.employee_id}</p>
               <p><b>Email:</b> {emp.email}</p>
               <p><b>Current Password:</b> {emp.password}</p>
+              <p><b>Company ID:</b> {emp.company_id}</p>
               <p>
                 <b>Created At:</b>{" "}
                 {emp.created_at

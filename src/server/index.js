@@ -1,4 +1,3 @@
-// server.js
 const mysql = require("mysql2");
 const express = require("express");
 const cors = require("cors");
@@ -236,13 +235,14 @@ app.post("/api/employees/share", async (req, res) => {
 // 🚀 MANAGER PASSWORD RESET WITH OTP (1 min expiry)
 // ==============================
 app.post("/api/manager/forgot-password", (req, res) => {
-  const { companyId } = req.body;
-  if (!companyId) return res.status(400).json({ error: "Company ID required" });
+  const { identifier } = req.body;
+  if (!identifier) return res.status(400).json({ error: "Company ID or Email required" });
 
-  db.query("SELECT email FROM companies WHERE company_id=?", [companyId], async (err, results) => {
+  db.query("SELECT company_id, email FROM companies WHERE company_id=? OR email=?", [identifier, identifier], async (err, results) => {
     if (err) return res.status(500).json({ error: "Database error: " + err.message });
     if (results.length === 0) return res.status(404).json({ error: "Company not found" });
 
+    const companyId = results[0].company_id;
     const companyEmail = results[0].email;
     const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
     const otpExpiry = new Date(Date.now() + 1 * 60 * 1000); // 1 minute
@@ -271,18 +271,18 @@ app.post("/api/manager/forgot-password", (req, res) => {
 });
 
 app.post("/api/manager/reset-password", (req, res) => {
-  const { companyId, otp, newPassword } = req.body;
-  if (!companyId || !otp || !newPassword)
+  const { identifier, otp, newPassword } = req.body;
+  if (!identifier || !otp || !newPassword)
     return res.status(400).json({ error: "All fields are required" });
 
   db.query(
-    "SELECT otp, otp_expiry FROM companies WHERE company_id=?",
-    [companyId],
+    "SELECT company_id, otp, otp_expiry FROM companies WHERE company_id=? OR email=?",
+    [identifier, identifier],
     (err, results) => {
       if (err) return res.status(500).json({ error: "Database error: " + err.message });
       if (results.length === 0) return res.status(404).json({ error: "Company not found" });
 
-      const { otp: dbOtp, otp_expiry } = results[0];
+      const { company_id, otp: dbOtp, otp_expiry } = results[0];
 
       if (String(dbOtp) !== String(otp)) return res.status(400).json({ error: "Invalid OTP" });
       if (!otp_expiry || new Date() > new Date(otp_expiry))
@@ -290,7 +290,7 @@ app.post("/api/manager/reset-password", (req, res) => {
 
       db.query(
         "UPDATE companies SET password=?, otp=NULL, otp_expiry=NULL WHERE company_id=?",
-        [newPassword, companyId],
+        [newPassword, company_id],
         (err2) => {
           if (err2) return res.status(500).json({ error: "Database error: " + err2.message });
           res.json({ message: "✅ Password updated successfully!" });
