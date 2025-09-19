@@ -43,7 +43,7 @@ function EmployeeDashboardScreen() {
             </button>
             <button
               style={menuBtnStyle}
-              onClick={() => navigate("/employee-fairs-done")}
+              onClick={() => navigate("/folder-upload")} // ✅ Updated route for NEW FAIRs
             >
               NEW FAIRs
             </button>
