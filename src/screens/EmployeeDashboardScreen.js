@@ -41,6 +41,12 @@ function EmployeeDashboardScreen() {
             >
               FAIRs Done
             </button>
+            <button
+              style={menuBtnStyle}
+              onClick={() => navigate("/employee-fairs-done")}
+            >
+              NEW FAIRs
+            </button>
           </div>
         </div>
       )}

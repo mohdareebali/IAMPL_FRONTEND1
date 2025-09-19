@@ -9,7 +9,7 @@ USE innovascape;
 -- ====================================================
 -- 🏢 Companies Table
 -- ====================================================
-CREATE TABLE companies (
+CREATE TABLE IF NOT EXISTS companies (
     id INT AUTO_INCREMENT PRIMARY KEY,
     company_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE companies (
 -- ====================================================
 -- 👥 Employees Table
 -- ====================================================
-CREATE TABLE employees (
+CREATE TABLE IF NOT EXISTS employees (
     id INT AUTO_INCREMENT PRIMARY KEY,
     employee_id VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL,
@@ -32,14 +32,18 @@ CREATE TABLE employees (
     otp_expiry DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     password_changed_at DATETIME,
-    company_id VARCHAR(255)
+    company_id VARCHAR(50),
+    UNIQUE (employee_id)
 );
 
 -- ====================================================
--- 📥 Insert Example Employee
+-- 📥 Insert Example Data
 -- ====================================================
-INSERT INTO employees (employee_id, email, password)
-VALUES ('EMP001', 'employee@example.com', 'StrongPass123!');
+INSERT INTO companies (company_name, email, company_id, password)
+VALUES ('Innovascape Pvt Ltd', 'tradingnoor2@gmail.com', '1122', 'Aree@123');
+
+INSERT INTO employees (employee_id, email, password, company_id)
+VALUES ('EMP001', 'areebnoor10@gmail.com', 'Aree@123', '1122');
 
 -- ====================================================
 -- 🔎 Select Queries
@@ -58,25 +62,21 @@ UPDATE employees
 SET otp = '123456', otp_expiry = DATE_ADD(NOW(), INTERVAL 1 MINUTE)
 WHERE employee_id = 'EMP001';
 
--- Disable safe update mode
+-- Auto-generate employee_id for NULL entries
 SET SQL_SAFE_UPDATES = 0;
-
--- Auto-generate employee_id for null entries
 UPDATE employees
 SET employee_id = CONCAT('EMP', id)
 WHERE employee_id IS NULL;
-
--- Re-enable safe update mode
 SET SQL_SAFE_UPDATES = 1;
 
 -- ====================================================
 -- ❌ Delete Queries
 -- ====================================================
 DELETE FROM employees
-WHERE employee_id = 'EMP001';
+WHERE email = 'areebnoor10@gmail.com';
 
-DELETE FROM employees
-WHERE email = '@gmail.com';
+DELETE FROM companies
+WHERE email = 'tradingnoor2@gmail.com';
 
 -- ====================================================
 -- 🧹 Cleanup / Truncate
@@ -88,3 +88,14 @@ TRUNCATE TABLE companies;
 -- 📂 Show Tables
 -- ====================================================
 SHOW TABLES;
+
+-- ====================================================
+-- ✅ Alter Tables (if needed in future)
+-- ====================================================
+ALTER TABLE companies
+ADD COLUMN otp VARCHAR(10),
+ADD COLUMN otp_expiry DATETIME;
+
+ALTER TABLE employees 
+ADD COLUMN password_changed_at DATETIME,
+ADD COLUMN company_id VARCHAR(255);

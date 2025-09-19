@@ -1,9 +1,18 @@
+#python -m pip install --upgrade pip
+#.\env\Scripts\Activate.ps1
+#node src/server/index.js
 Flask==2.3.3
 Flask-Cors==3.0.10
-mysql-connector-python==8.1.1
+mysql-connector-python==9.0.0
+
 bcrypt==4.0.1
 ocrmypdf==14.0.0
 pillow==10.1.0
-pytesseract==0.3.11
+pytesseract==0.3.13
+
 python-dotenv==1.0.0
-reportlab==4.0
+reportlab==4.0.0
+# For sending emails
+Flask-Mail==0.9.1
+# For generating secure tokens/OTP
+itsdangerous==2.1.2

@@ -1,5 +1,5 @@
 // src/screens/ManagerForgotScreen.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/Innovascape-logo.png";
 import axios from "axios";
@@ -11,6 +11,9 @@ function ManagerForgotScreen() {
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+
+  const [timeLeft, setTimeLeft] = useState(0); // countdown in seconds
+  const [otpSent, setOtpSent] = useState(false);
 
   const navigate = useNavigate();
 
@@ -59,6 +62,15 @@ function ManagerForgotScreen() {
     return regex.test(password);
   };
 
+  // Countdown effect
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
   // Step 1: Send OTP
   const handleSendOtp = async () => {
     if (!identifier) return alert("Please enter Company ID or Email");
@@ -70,10 +82,12 @@ function ManagerForgotScreen() {
     setLoading(true);
     try {
       const response = await axios.post("http://localhost:5000/api/manager/forgot-password", {
-        identifier, // Send as identifier
+        identifier,
       });
       alert(response.data.message);
-      setStep(2); // Move to OTP verification
+      setStep(2);
+      setOtpSent(true);
+      setTimeLeft(60); // ⏳ 1 minute countdown
     } catch (error) {
       console.error(error);
       alert(error.response?.data?.error || "Something went wrong.");
@@ -98,13 +112,18 @@ function ManagerForgotScreen() {
         newPassword,
       });
       alert(response.data.message);
-      navigate("/login", { state: { role: "manager" } }); // Redirect to manager login
+      navigate("/login", { state: { role: "manager" } });
     } catch (error) {
       console.error(error);
       alert(error.response?.data?.error || "Something went wrong.");
     } finally {
       setLoading(false);
     }
+  };
+
+  // Step 2.5: Resend OTP
+  const handleResendOtp = () => {
+    handleSendOtp();
   };
 
   return (
@@ -153,6 +172,21 @@ function ManagerForgotScreen() {
           <button style={buttonStyle} onClick={handleVerifyOtp} disabled={loading}>
             {loading ? "Verifying..." : "Verify OTP & Reset Password"}
           </button>
+
+          {/* Countdown or Resend Button */}
+          {otpSent && timeLeft > 0 ? (
+            <p style={{ color: "#333", marginTop: "10px" }}>
+              ⏳ Resend OTP in {timeLeft}s
+            </p>
+          ) : (
+            <button
+              style={{ ...buttonStyle, backgroundColor: "#f39c12" }}
+              onClick={handleResendOtp}
+              disabled={loading}
+            >
+              Resend OTP
+            </button>
+          )}
         </>
       )}
 

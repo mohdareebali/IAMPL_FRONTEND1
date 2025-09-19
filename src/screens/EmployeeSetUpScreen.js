@@ -19,6 +19,7 @@ function EmployeeSetupScreen() {
     password: "",
     company_id: "", // ✅ Added company_id
   });
+  const [idError, setIdError] = useState(""); // ✅ error state for duplicate IDs
   const navigate = useNavigate();
 
   // Fetch employees by company_id
@@ -43,12 +44,27 @@ function EmployeeSetupScreen() {
 
   const handleGenerate = () => {
     if (newEmployee.employee_id.trim() !== "") {
+      // ✅ Check if employee_id already exists
+      const exists = employees.some(
+        (emp) => emp.employee_id === newEmployee.employee_id
+      );
+      if (exists) {
+        setIdError("❌ Employee ID already exists!");
+        setNewEmployee({ ...newEmployee, password: "" });
+        return;
+      }
+      setIdError(""); // clear error if unique
       setNewEmployee({ ...newEmployee, password: generatePassword() });
     }
   };
 
   // Add employee to backend database
   const handleAdd = async () => {
+    if (idError) {
+      alert("Please use a unique Employee ID");
+      return;
+    }
+
     if (
       !newEmployee.employee_id ||
       !newEmployee.email ||
@@ -131,6 +147,8 @@ function EmployeeSetupScreen() {
         onChange={handleChange}
         onBlur={handleGenerate}
       />
+      {idError && <p style={{ color: "red" }}>{idError}</p>}
+
       <input
         style={inputStyle}
         type="email"
