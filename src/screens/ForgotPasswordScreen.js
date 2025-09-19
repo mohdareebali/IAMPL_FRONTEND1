@@ -17,16 +17,28 @@ function ForgotPasswordScreen() {
 
   const navigate = useNavigate();
 
+  // 🟢 Box with border & shadow
   const containerStyle = {
-    height: "100vh",
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
     justifyContent: "center",
+    alignItems: "center",
+    width: "380px",
+    padding: "40px",
+    backgroundColor: "#fff",
+    border: "1px solid #ccc",
+    borderRadius: "10px",
+    boxShadow: "0px 4px 12px rgba(0,0,0,0.1)",
+    textAlign: "center",
+  };
+
+  const pageStyle = {
+    height: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
     background: "linear-gradient(to right, #e3f2fd, #bbdefb)",
     fontFamily: "Arial, sans-serif",
-    textAlign: "center",
-    padding: "20px",
   };
 
   const logoStyle = { width: "160px", marginBottom: "20px", opacity: 0.9 };
@@ -130,75 +142,77 @@ function ForgotPasswordScreen() {
   };
 
   return (
-    <div style={containerStyle}>
-      <img src={logo} alt="Company Logo" style={logoStyle} />
-      <h2 style={headingStyle}>Reset Password</h2>
+    <div style={pageStyle}>
+      <div style={containerStyle}>
+        <img src={logo} alt="Company Logo" style={logoStyle} />
+        <h2 style={headingStyle}>Reset Password</h2>
 
-      {step === 1 && (
-        <>
-          <input
-            style={inputStyle}
-            type="text"
-            placeholder="Enter Employee ID or Email"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-          />
-          <input
-            style={inputStyle}
-            type="password"
-            placeholder="New Password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-          />
-          <input
-            style={inputStyle}
-            type="password"
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-          <button style={buttonStyle} onClick={handleSendOtp} disabled={loading}>
-            {loading ? "Sending OTP..." : "Get OTP"}
-          </button>
-        </>
-      )}
-
-      {step === 2 && (
-        <>
-          <input
-            style={inputStyle}
-            type="text"
-            placeholder="Enter OTP"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-          />
-          <button style={buttonStyle} onClick={handleVerifyOtp} disabled={loading}>
-            {loading ? "Verifying..." : "Verify OTP & Reset Password"}
-          </button>
-
-          {/* Countdown or Resend Button */}
-          {otpSent && timeLeft > 0 ? (
-            <p style={{ color: "#333", marginTop: "10px" }}>
-              ⏳ Resend OTP in {timeLeft}s
-            </p>
-          ) : (
-            <button
-              style={{ ...buttonStyle, backgroundColor: "#f39c12" }}
-              onClick={handleResendOtp}
-              disabled={loading}
-            >
-              Resend OTP
+        {step === 1 && (
+          <>
+            <input
+              style={inputStyle}
+              type="text"
+              placeholder="Enter Employee ID or Email"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+            />
+            <input
+              style={inputStyle}
+              type="password"
+              placeholder="New Password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+            <input
+              style={inputStyle}
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+            <button style={buttonStyle} onClick={handleSendOtp} disabled={loading}>
+              {loading ? "Sending OTP..." : "Get OTP"}
             </button>
-          )}
-        </>
-      )}
+          </>
+        )}
 
-      <button
-        style={{ ...buttonStyle, backgroundColor: "#6c757d" }}
-        onClick={() => navigate(-1)}
-      >
-        Back to Login
-      </button>
+        {step === 2 && (
+          <>
+            <input
+              style={inputStyle}
+              type="text"
+              placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+            />
+            <button style={buttonStyle} onClick={handleVerifyOtp} disabled={loading}>
+              {loading ? "Verifying..." : "Verify OTP & Reset Password"}
+            </button>
+
+            {/* Countdown or Resend Button */}
+            {otpSent && timeLeft > 0 ? (
+              <p style={{ color: "#333", marginTop: "10px" }}>
+                ⏳ Resend OTP in {timeLeft}s
+              </p>
+            ) : (
+              <button
+                style={{ ...buttonStyle, backgroundColor: "#f39c12" }}
+                onClick={handleResendOtp}
+                disabled={loading}
+              >
+                Resend OTP
+              </button>
+            )}
+          </>
+        )}
+
+        <button
+          style={{ ...buttonStyle, backgroundColor: "#6c757d" }}
+          onClick={() => navigate(-1)}
+        >
+          Back to Login
+        </button>
+      </div>
     </div>
   );
 }
