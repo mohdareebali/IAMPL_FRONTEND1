@@ -73,11 +73,13 @@ function LoginScreen() {
     <div style={pageStyle}>
       <div style={card}>
         {/* ✅ IAMPL Logo from public folder */}
-        <img
-          src="/International-Aerospace-Manufacturing-Pvt-Ltd-(IAMPL)-logo.webp"
-          alt="IAMPL Logo"
-          style={logoStyle}
-        />
+        {/* ✅ IAMPL Logo from public folder (JPG) */}
+    <img
+        src="/International-Aerospace-Manufacturing-Pvt-Ltd-(IAMPL)-logo.jpg"
+        alt="IAMPL Logo"
+        style={logoStyle}
+      />
+
 
         <h2 style={title}>
           {role === "employee" ? "Employee Login" : "Manager Login"}

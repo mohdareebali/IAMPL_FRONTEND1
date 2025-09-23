@@ -74,13 +74,23 @@ function RegisterScreen() {
     textAlign: "center",
   };
 
-  // ✅ Updated IAMPL logo
+  // ✅ Updated IAMPL logo (jpg version from public folder)
   const logoStyle = { width: 120, margin: "6px auto 10px", display: "block" };
-  const titleStyle = { fontSize: 20, margin: "6px 0 6px", fontWeight: 700, color: "#263245" };
+  const titleStyle = {
+    fontSize: 20,
+    margin: "6px 0 6px",
+    fontWeight: 700,
+    color: "#263245",
+  };
   const subtitleStyle = { fontSize: 13, color: "#6b6b6b", marginBottom: 14 };
 
   const formGroup = { width: "100%", marginTop: 10, textAlign: "left" };
-  const label = { display: "block", fontSize: 13, color: "#333", marginBottom: 6 };
+  const label = {
+    display: "block",
+    fontSize: 13,
+    color: "#333",
+    marginBottom: 6,
+  };
   const requiredStar = { color: "#b71c1c", marginRight: 6 };
 
   const input = {
@@ -117,7 +127,12 @@ function RegisterScreen() {
     cursor: "pointer",
   };
 
-  const smallNote = { marginTop: 12, fontSize: 13, color: "#444", textAlign: "center" };
+  const smallNote = {
+    marginTop: 12,
+    fontSize: 13,
+    color: "#444",
+    textAlign: "center",
+  };
 
   const responsiveCss = `
     @media (max-width: 520px) {
@@ -133,7 +148,7 @@ function RegisterScreen() {
       <div style={card} className="rs-card">
         {/* ✅ IAMPL Logo */}
         <img
-          src="/International-Aerospace-Manufacturing-Pvt-Ltd-(IAMPL)-logo.webp"
+          src="/International-Aerospace-Manufacturing-Pvt-Ltd-(IAMPL)-logo.jpg"
           alt="IAMPL Logo"
           style={logoStyle}
         />
@@ -219,7 +234,13 @@ function RegisterScreen() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
-                  <circle cx="12" cy="12" r="3" stroke="#555" strokeWidth="1.2" />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                    stroke="#555"
+                    strokeWidth="1.2"
+                  />
                 </svg>
               ) : (
                 <svg
@@ -248,16 +269,20 @@ function RegisterScreen() {
             </button>
           </div>
           <div style={{ marginTop: 8, fontSize: 12, color: "#666" }}>
-            Password must be at least 8 characters and include uppercase, lowercase, number, and
-            special character.
+            Password must be at least 8 characters and include uppercase,
+            lowercase, number, and special character.
           </div>
         </div>
 
         <button
           style={registerBtn}
           onClick={handleRegister}
-          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#0f4a85")}
-          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#184f9b")}
+          onMouseOver={(e) =>
+            (e.currentTarget.style.backgroundColor = "#0f4a85")
+          }
+          onMouseOut={(e) =>
+            (e.currentTarget.style.backgroundColor = "#184f9b")
+          }
         >
           Register
         </button>
@@ -265,7 +290,11 @@ function RegisterScreen() {
         <div style={smallNote}>
           Already have an account?{" "}
           <span
-            style={{ color: "#1565c0", cursor: "pointer", textDecoration: "underline" }}
+            style={{
+              color: "#1565c0",
+              cursor: "pointer",
+              textDecoration: "underline",
+            }}
             onClick={() => navigate("/login", { state: { role: "manager" } })}
           >
             Login

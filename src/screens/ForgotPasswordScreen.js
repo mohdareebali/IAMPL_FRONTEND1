@@ -18,7 +18,8 @@ function ForgotPasswordScreen() {
 
   // Strong password validation
   const isStrongPassword = (password) => {
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+    const regex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
     return regex.test(password);
   };
 
@@ -43,9 +44,10 @@ function ForgotPasswordScreen() {
 
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/employees/forgot-password", {
-        identifier,
-      });
+      const response = await axios.post(
+        "http://localhost:5000/api/employees/forgot-password",
+        { identifier }
+      );
       alert(response.data.message || "OTP sent");
       setStep(2);
       setOtpSent(true);
@@ -69,11 +71,10 @@ function ForgotPasswordScreen() {
 
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/employees/reset-password", {
-        identifier,
-        otp,
-        newPassword,
-      });
+      const response = await axios.post(
+        "http://localhost:5000/api/employees/reset-password",
+        { identifier, otp, newPassword }
+      );
       alert(response.data.message || "Password reset successful");
       navigate("/login", { state: { role: "employee" } });
     } catch (error) {
@@ -115,8 +116,17 @@ function ForgotPasswordScreen() {
     textAlign: "center",
   };
 
-  const logoStyle = { width: 120, display: "block", margin: "6px auto 12px" };
-  const titleStyle = { fontSize: 20, fontWeight: 700, margin: "6px 0 4px", color: "#263245" };
+  const logoStyle = {
+    width: 120,
+    display: "block",
+    margin: "6px auto 12px",
+  };
+  const titleStyle = {
+    fontSize: 20,
+    fontWeight: 700,
+    margin: "6px 0 4px",
+    color: "#263245",
+  };
   const subtitleStyle = { fontSize: 13, color: "#6b6b6b", marginBottom: 14 };
 
   const input = {
@@ -129,7 +139,12 @@ function ForgotPasswordScreen() {
   };
 
   const inputWrapper = { width: "100%", marginTop: 12, textAlign: "left" };
-  const labelStyle = { fontSize: 13, color: "#333", marginBottom: 6, display: "block" };
+  const labelStyle = {
+    fontSize: 13,
+    color: "#333",
+    marginBottom: 6,
+    display: "block",
+  };
 
   const primaryBtn = {
     marginTop: 16,
@@ -170,7 +185,12 @@ function ForgotPasswordScreen() {
     cursor: "pointer",
   };
 
-  const smallText = { fontSize: 13, color: "#333", marginTop: 10, textAlign: "center" };
+  const smallText = {
+    fontSize: 13,
+    color: "#333",
+    marginTop: 10,
+    textAlign: "center",
+  };
 
   const responsiveCss = `
     @media (max-width: 560px) {
@@ -183,17 +203,24 @@ function ForgotPasswordScreen() {
     <div style={pageStyle}>
       <style>{responsiveCss}</style>
 
-      <div style={cardStyle} className="fp-card" role="main" aria-labelledby="fp-title">
-        {/* ✅ Updated IAMPL Logo */}
+      <div
+        style={cardStyle}
+        className="fp-card"
+        role="main"
+        aria-labelledby="fp-title"
+      >
+        {/* ✅ Updated IAMPL Logo (jpg version) */}
         <img
-          src="/International-Aerospace-Manufacturing-Pvt-Ltd-(IAMPL)-logo.webp"
+          src="/International-Aerospace-Manufacturing-Pvt-Ltd-(IAMPL)-logo.jpg"
           alt="IAMPL Logo"
           style={logoStyle}
         />
         <div id="fp-title" style={titleStyle}>
           Reset Password
         </div>
-        <div style={subtitleStyle}>Use OTP to verify and set a new password</div>
+        <div style={subtitleStyle}>
+          Use OTP to verify and set a new password
+        </div>
 
         {step === 1 && (
           <>
@@ -230,7 +257,11 @@ function ForgotPasswordScreen() {
               />
             </div>
 
-            <button style={primaryBtn} onClick={handleSendOtp} disabled={loading}>
+            <button
+              style={primaryBtn}
+              onClick={handleSendOtp}
+              disabled={loading}
+            >
               {loading ? "Sending OTP..." : "Get OTP"}
             </button>
           </>
@@ -249,14 +280,22 @@ function ForgotPasswordScreen() {
               />
             </div>
 
-            <button style={primaryBtn} onClick={handleVerifyOtp} disabled={loading}>
+            <button
+              style={primaryBtn}
+              onClick={handleVerifyOtp}
+              disabled={loading}
+            >
               {loading ? "Verifying..." : "Verify OTP & Reset Password"}
             </button>
 
             {otpSent && timeLeft > 0 ? (
               <div style={smallText}>⏳ Resend OTP in {timeLeft}s</div>
             ) : (
-              <button style={resendBtn} onClick={handleResendOtp} disabled={loading}>
+              <button
+                style={resendBtn}
+                onClick={handleResendOtp}
+                disabled={loading}
+              >
                 Resend OTP
               </button>
             )}

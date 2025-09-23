@@ -16,3 +16,5 @@ reportlab==4.0.0
 Flask-Mail==0.9.1
 # For generating secure tokens/OTP
 itsdangerous==2.1.2
+
+npm install @mui/icons-material @mui/material @emotion/react @emotion/styled

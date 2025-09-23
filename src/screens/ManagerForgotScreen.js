@@ -113,7 +113,12 @@ function ManagerForgotScreen() {
   };
 
   const logoStyle = { width: 120, display: "block", margin: "6px auto 12px" };
-  const titleStyle = { fontSize: 20, fontWeight: 700, margin: "6px 0 4px", color: "#263245" };
+  const titleStyle = {
+    fontSize: 20,
+    fontWeight: 700,
+    margin: "6px 0 4px",
+    color: "#263245",
+  };
   const subtitleStyle = { fontSize: 13, color: "#6b6b6b", marginBottom: 14 };
 
   const input = {
@@ -126,7 +131,12 @@ function ManagerForgotScreen() {
   };
 
   const inputWrapper = { width: "100%", marginTop: 12, textAlign: "left" };
-  const labelStyle = { fontSize: 13, color: "#333", marginBottom: 6, display: "block" };
+  const labelStyle = {
+    fontSize: 13,
+    color: "#333",
+    marginBottom: 6,
+    display: "block",
+  };
 
   const primaryBtn = {
     marginTop: 16,
@@ -167,14 +177,19 @@ function ManagerForgotScreen() {
     cursor: "pointer",
   };
 
-  const smallText = { fontSize: 13, color: "#333", marginTop: 10, textAlign: "center" };
+  const smallText = {
+    fontSize: 13,
+    color: "#333",
+    marginTop: 10,
+    textAlign: "center",
+  };
 
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>
-        {/* ✅ Updated IAMPL Logo */}
+        {/* ✅ Updated IAMPL Logo (jpg from public folder) */}
         <img
-          src="/International-Aerospace-Manufacturing-Pvt-Ltd-(IAMPL)-logo.webp"
+          src="/International-Aerospace-Manufacturing-Pvt-Ltd-(IAMPL)-logo.jpg"
           alt="IAMPL Logo"
           style={logoStyle}
         />
@@ -213,7 +228,11 @@ function ManagerForgotScreen() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </div>
-            <button style={primaryBtn} onClick={handleSendOtp} disabled={loading}>
+            <button
+              style={primaryBtn}
+              onClick={handleSendOtp}
+              disabled={loading}
+            >
               {loading ? "Sending OTP..." : "Get OTP"}
             </button>
           </>
@@ -231,14 +250,22 @@ function ManagerForgotScreen() {
                 onChange={(e) => setOtp(e.target.value)}
               />
             </div>
-            <button style={primaryBtn} onClick={handleVerifyOtp} disabled={loading}>
+            <button
+              style={primaryBtn}
+              onClick={handleVerifyOtp}
+              disabled={loading}
+            >
               {loading ? "Verifying..." : "Verify OTP & Reset Password"}
             </button>
 
             {otpSent && timeLeft > 0 ? (
               <div style={smallText}>⏳ Resend OTP in {timeLeft}s</div>
             ) : (
-              <button style={resendBtn} onClick={handleResendOtp} disabled={loading}>
+              <button
+                style={resendBtn}
+                onClick={handleResendOtp}
+                disabled={loading}
+              >
                 Resend OTP
               </button>
             )}
