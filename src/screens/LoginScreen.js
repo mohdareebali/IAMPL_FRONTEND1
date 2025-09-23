@@ -1,7 +1,6 @@
 // src/screens/LoginScreen.js
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import logo from "../assets/Innovascape-logo.png";
 
 function LoginScreen() {
   const [id, setId] = useState("");
@@ -11,62 +10,7 @@ function LoginScreen() {
 
   const role = location.state?.role || "employee";
 
-  const pageStyle = {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100vh",
-    background: "linear-gradient(to right, #e3f2fd, #bbdefb)",
-    fontFamily: "Arial, sans-serif",
-  };
-
-  // 🟢 Box with border & shadow
-  const containerStyle = {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    width: "380px",
-    padding: "40px",
-    backgroundColor: "#fff",
-    border: "1px solid #ccc",
-    borderRadius: "10px",
-    boxShadow: "0px 4px 12px rgba(0,0,0,0.1)",
-    textAlign: "center",
-  };
-
-  const headingStyle = { color: "#0d47a1", marginBottom: "20px" };
-  const logoStyle = { width: "150px", marginBottom: "30px" };
-  const inputStyle = {
-    width: "100%",
-    padding: "12px",
-    margin: "10px 0",
-    border: "1px solid #ccc",
-    borderRadius: "6px",
-    fontSize: "14px",
-    outline: "none",
-  };
-  const buttonStyle = {
-    width: "100%",
-    padding: "12px",
-    margin: "15px 0",
-    border: "none",
-    borderRadius: "6px",
-    backgroundColor: "#0d47a1",
-    color: "white",
-    fontSize: "16px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    transition: "0.3s",
-  };
-  const linkStyle = {
-    color: "#1565c0",
-    textDecoration: "underline",
-    cursor: "pointer",
-    marginTop: "5px",
-    display: "inline-block",
-  };
-
+  // 🔹 Logic unchanged
   const handleLogin = async () => {
     if (!id || !password) {
       alert("Please enter ID or Email and Password");
@@ -127,46 +71,58 @@ function LoginScreen() {
 
   return (
     <div style={pageStyle}>
-      <div style={containerStyle}>
-        <img src={logo} alt="Company Logo" style={logoStyle} />
-        <h2 style={headingStyle}>
-          Login as {role.charAt(0).toUpperCase() + role.slice(1)}
-        </h2>
+      <div style={card}>
+        {/* ✅ IAMPL Logo from public folder */}
+        <img
+          src="/International-Aerospace-Manufacturing-Pvt-Ltd-(IAMPL)-logo.webp"
+          alt="IAMPL Logo"
+          style={logoStyle}
+        />
 
+        <h2 style={title}>
+          {role === "employee" ? "Employee Login" : "Manager Login"}
+        </h2>
+        <p style={subtitle}>Sign in to your account</p>
+
+        {/* 🔹 ID OR Email field */}
+        <label style={label}>
+          * {role === "employee" ? "Employee ID or Email" : "Company ID or Email"}
+        </label>
         <input
-          style={inputStyle}
+          style={input}
           type="text"
-          placeholder="Enter ID or Email"
+          placeholder={`Enter your ${
+            role === "employee" ? "employee ID or email" : "company ID or email"
+          }`}
           value={id}
           onChange={(e) => setId(e.target.value)}
         />
+
+        {/* Password */}
+        <label style={label}>* Password</label>
         <input
-          style={inputStyle}
+          style={input}
           type="password"
-          placeholder="Enter Password"
+          placeholder="Enter your password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button
-          style={buttonStyle}
-          onClick={handleLogin}
-          onMouseOver={(e) => (e.target.style.backgroundColor = "#1565c0")}
-          onMouseOut={(e) => (e.target.style.backgroundColor = "#0d47a1")}
-        >
+        {/* Buttons */}
+        <button style={loginBtn} onClick={handleLogin}>
           Login
         </button>
 
-        <p>
-          <span style={linkStyle} onClick={handleForgotPassword}>
+        <div style={{ marginTop: "10px" }}>
+          <span style={link} onClick={handleForgotPassword}>
             Forgot Password?
           </span>
-        </p>
+        </div>
 
         {role === "manager" && (
-          <p>
+          <p style={{ marginTop: "8px" }}>
             Don’t have an account?{" "}
-            <span style={linkStyle} onClick={handleRegister}>
+            <span style={link} onClick={handleRegister}>
               Sign Up
             </span>
           </p>
@@ -175,5 +131,77 @@ function LoginScreen() {
     </div>
   );
 }
+
+/* ---------- Styles ---------- */
+const pageStyle = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  height: "100vh",
+  background: "#fff",
+  fontFamily: "Arial, sans-serif",
+};
+
+const card = {
+  width: "380px",
+  padding: "30px",
+  border: "1px dashed #cbd5e1",
+  borderRadius: "8px",
+  background: "#fff",
+  textAlign: "left",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+};
+
+const logoStyle = {
+  display: "block",
+  margin: "0 auto 12px",
+  width: "100px",
+  objectFit: "contain",
+};
+
+const title = { textAlign: "center", margin: "10px 0 4px", color: "#111827" };
+const subtitle = {
+  textAlign: "center",
+  margin: "0 0 20px",
+  fontSize: "14px",
+  color: "#6b7280",
+};
+
+const label = {
+  fontSize: "13px",
+  marginBottom: "4px",
+  display: "block",
+  color: "#111827",
+};
+
+const input = {
+  width: "100%",
+  padding: "10px",
+  border: "1px solid #d1d5db",
+  borderRadius: "6px",
+  marginBottom: "14px",
+  fontSize: "14px",
+  outline: "none",
+};
+
+const loginBtn = {
+  width: "100%",
+  padding: "12px",
+  backgroundColor: "#1e3a8a",
+  color: "white",
+  fontWeight: "bold",
+  fontSize: "15px",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+  marginTop: "6px",
+};
+
+const link = {
+  color: "#1d4ed8",
+  textDecoration: "underline",
+  cursor: "pointer",
+  fontSize: "13px",
+};
 
 export default LoginScreen;

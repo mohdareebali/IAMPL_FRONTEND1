@@ -1,4 +1,4 @@
-#!d:\ocr\mysql\dashboard\env\scripts\python.exe
+#!D:\ocr\mysql\IAMPL_FRONTEND\env\Scripts\python.exe
 """Extract pdf structure in XML format"""
 
 import logging
