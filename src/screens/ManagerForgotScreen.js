@@ -1,93 +1,71 @@
 // src/screens/ManagerForgotScreen.js
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+/**
+ * ManagerForgotScreen
+ *
+ * UI matches the employee Forgot Password screen style.
+ * - Sends a request to /api/manager/forgot-password with { identifier }
+ * - On success navigates to /manager-forgot/otp with location.state = { identifier, email }
+ *
+ * Note: Place IAMPL logo in public folder if you plan to show it elsewhere.
+ */
+
 function ManagerForgotScreen() {
-  const [identifier, setIdentifier] = useState(""); // Company ID or Email
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState(1);
+  const [identifier, setIdentifier] = useState(""); // Email or Manager ID
   const [loading, setLoading] = useState(false);
-
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [otpSent, setOtpSent] = useState(false);
-
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("info"); // "success" | "error" | "info"
   const navigate = useNavigate();
 
-  // Strong password validation
-  const isStrongPassword = (password) =>
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/.test(
-      password
-    );
+  const showMessage = (text, type = "info", timeout = 6000) => {
+    setMessage(text);
+    setMessageType(type);
+    if (timeout) {
+      setTimeout(() => setMessage(""), timeout);
+    }
+  };
 
-  // Countdown
-  useEffect(() => {
-    if (timeLeft <= 0) return;
-    const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft]);
-
-  // Step 1: Send OTP
-  const handleSendOtp = async () => {
-    if (!identifier) return alert("Please enter Company ID or Email");
-    if (newPassword !== confirmPassword) return alert("Passwords do not match");
-    if (!isStrongPassword(newPassword)) {
-      return alert(
-        "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character (!@#$%^&*)"
-      );
+  const handleSendCode = async () => {
+    const value = identifier.trim();
+    if (!value) {
+      showMessage("Please enter your Email Address or Manager ID", "error");
+      return;
     }
 
     setLoading(true);
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/manager/forgot-password",
-        { identifier }
-      );
-      alert(response.data.message || "OTP sent");
-      setStep(2);
-      setOtpSent(true);
-      setTimeLeft(60);
-    } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.error || "Something went wrong.");
+      // Expected backend endpoints:
+      // POST /api/manager/forgot-password  -> { message, email? }
+      const res = await axios.post("http://localhost:5000/api/manager/forgot-password", {
+        identifier: value,
+      });
+
+      showMessage(res.data.message || "Verification code sent to your email", "success", 4000);
+
+      // IMPORTANT: navigate to manager OTP route (matches App.js)
+      navigate("/manager-forgot/otp", {
+        state: { identifier: value, email: res.data.email || value },
+      });
+    } catch (err) {
+      console.error("Forgot password error:", err);
+
+      const errMsg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        (err?.response?.status === 404
+          ? "No account found with that identifier."
+          : "Failed to send code. Please try again.");
+
+      showMessage(errMsg, "error", 7000);
     } finally {
       setLoading(false);
     }
   };
 
-  // Step 2: Verify OTP & Reset Password
-  const handleVerifyOtp = async () => {
-    if (!otp) return alert("Please enter OTP");
-    if (!isStrongPassword(newPassword)) {
-      return alert(
-        "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character (!@#$%^&*)"
-      );
-    }
-
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        "http://localhost:5000/api/manager/reset-password",
-        { identifier, otp, newPassword }
-      );
-      alert(response.data.message || "Password reset successful");
-      navigate("/login", { state: { role: "manager" } });
-    } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.error || "Something went wrong.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendOtp = () => {
-    if (timeLeft > 0) return;
-    handleSendOtp();
-  };
-
-  // ----------- Styles -----------
+  /* ---------- Styles (keeps same look as employee ForgotPasswordScreen) ---------- */
   const pageStyle = {
     minHeight: "100vh",
     display: "flex",
@@ -95,9 +73,8 @@ function ManagerForgotScreen() {
     justifyContent: "center",
     padding: 20,
     boxSizing: "border-box",
-    background: "linear-gradient(90deg, #ffffff 0%, #f6fbff 100%)",
-    fontFamily: "Arial, sans-serif",
-    color: "#222",
+    background: "#fff",
+    fontFamily: "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial",
   };
 
   const cardStyle = {
@@ -106,175 +83,128 @@ function ManagerForgotScreen() {
     padding: 36,
     borderRadius: 8,
     background: "#fff",
-    border: "2px dashed rgba(0,0,0,0.12)",
+    border: "2px dashed rgba(15,23,42,0.25)",
     boxShadow: "0 8px 28px rgba(13,71,161,0.03)",
     boxSizing: "border-box",
     textAlign: "center",
   };
 
-  const logoStyle = { width: 120, display: "block", margin: "6px auto 12px" };
-  const titleStyle = {
-    fontSize: 20,
-    fontWeight: 700,
-    margin: "6px 0 4px",
-    color: "#263245",
+  const iconWrapper = { display: "block", margin: "0 auto 12px" };
+  const titleStyle = { fontSize: 20, fontWeight: 700, margin: "6px 0 6px", color: "#0f172a" };
+  const subtitleStyle = {
+    fontSize: 14,
+    color: "#6b7280",
+    marginBottom: 18,
+    maxWidth: 440,
+    marginLeft: "auto",
+    marginRight: "auto",
   };
-  const subtitleStyle = { fontSize: 13, color: "#6b6b6b", marginBottom: 14 };
 
-  const input = {
+  const inputWrapper = { width: "100%", marginTop: 6, textAlign: "left" };
+  const labelStyle = { fontSize: 14, color: "#0f172a", marginBottom: 6, display: "block" };
+  const redAsterisk = { color: "#ef4444", marginRight: 6 };
+
+  const inputStyle = {
     width: "100%",
-    padding: "10px 12px",
+    padding: "12px 14px",
     borderRadius: 8,
     border: "1px solid #d0d0d0",
     fontSize: 14,
     boxSizing: "border-box",
   };
 
-  const inputWrapper = { width: "100%", marginTop: 12, textAlign: "left" };
-  const labelStyle = {
-    fontSize: 13,
-    color: "#333",
-    marginBottom: 6,
-    display: "block",
-  };
-
   const primaryBtn = {
-    marginTop: 16,
+    marginTop: 18,
     width: "100%",
-    padding: "12px 14px",
+    padding: "14px",
     borderRadius: 8,
     border: "none",
     backgroundColor: "#184f9b",
     color: "#fff",
     fontWeight: 700,
-    fontSize: 15,
-    cursor: "pointer",
+    fontSize: 16,
+    cursor: loading ? "not-allowed" : "pointer",
+    opacity: loading ? 0.9 : 1,
   };
 
-  const mutedBtn = {
-    marginTop: 12,
-    width: "100%",
-    padding: "10px 12px",
-    borderRadius: 8,
+  const backBtn = {
+    marginTop: 14,
+    background: "transparent",
     border: "none",
-    backgroundColor: "#6c757d",
-    color: "#fff",
-    fontWeight: 600,
-    fontSize: 14,
+    color: "#1d4ed8",
+    textDecoration: "underline",
     cursor: "pointer",
+    fontSize: 14,
   };
 
-  const resendBtn = {
-    marginTop: 10,
-    width: "100%",
-    padding: "10px 12px",
-    borderRadius: 8,
-    border: "none",
-    backgroundColor: "#f39c12",
-    color: "#fff",
-    fontWeight: 700,
+  const msgBase = {
+    marginTop: 14,
+    padding: "10px",
+    borderRadius: 6,
     fontSize: 14,
-    cursor: "pointer",
-  };
-
-  const smallText = {
-    fontSize: 13,
-    color: "#333",
-    marginTop: 10,
     textAlign: "center",
+  };
+  const msgStyles = {
+    info: { ...msgBase, background: "#eef6ff", color: "#084b9b", border: "1px solid #cfe6ff" },
+    success: { ...msgBase, background: "#e6f4ea", color: "#1b7a3a", border: "1px solid #b7e0bf" },
+    error: { ...msgBase, background: "#fff1f0", color: "#a11", border: "1px solid #f5c6c6" },
   };
 
   return (
     <div style={pageStyle}>
-      <div style={cardStyle}>
-        {/* ✅ Updated IAMPL Logo (jpg from public folder) */}
-        <img
-          src="/International-Aerospace-Manufacturing-Pvt-Ltd-(IAMPL)-logo.jpg"
-          alt="IAMPL Logo"
-          style={logoStyle}
-        />
-        <div style={titleStyle}>Reset Manager Password</div>
-        <div style={subtitleStyle}>Use OTP to verify and set a new password</div>
+      <div style={cardStyle} role="main" aria-labelledby="fp-title">
+        <div style={iconWrapper} aria-hidden>
+          {/* lock icon */}
+          <svg
+            width="56"
+            height="56"
+            viewBox="0 0 24 24"
+            fill="none"
+            style={{ display: "block", margin: "0 auto" }}
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect x="6" y="10" width="12" height="8" rx="1.5" stroke="#374151" strokeWidth="1.5" fill="none" />
+            <path d="M8 10V8a4 4 0 018 0v2" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="12" cy="14" r="0.8" fill="#374151" />
+          </svg>
+        </div>
 
-        {step === 1 && (
-          <>
-            <div style={inputWrapper}>
-              <label style={labelStyle}>Company ID or Email</label>
-              <input
-                style={input}
-                type="text"
-                placeholder="Enter Company ID or Email"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-              />
-            </div>
-            <div style={inputWrapper}>
-              <label style={labelStyle}>New Password</label>
-              <input
-                style={input}
-                type="password"
-                placeholder="Enter new password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
-            </div>
-            <div style={inputWrapper}>
-              <label style={labelStyle}>Confirm Password</label>
-              <input
-                style={input}
-                type="password"
-                placeholder="Confirm new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
-            <button
-              style={primaryBtn}
-              onClick={handleSendOtp}
-              disabled={loading}
-            >
-              {loading ? "Sending OTP..." : "Get OTP"}
-            </button>
-          </>
-        )}
+        <h1 id="fp-title" style={titleStyle}>
+          Forgot Password
+        </h1>
 
-        {step === 2 && (
-          <>
-            <div style={inputWrapper}>
-              <label style={labelStyle}>Enter OTP</label>
-              <input
-                style={input}
-                type="text"
-                placeholder="Enter OTP"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-              />
-            </div>
-            <button
-              style={primaryBtn}
-              onClick={handleVerifyOtp}
-              disabled={loading}
-            >
-              {loading ? "Verifying..." : "Verify OTP & Reset Password"}
-            </button>
+        <p style={subtitleStyle}>
+          Enter the email address with your account and we’ll send an email with confirmation to reset your password.
+        </p>
 
-            {otpSent && timeLeft > 0 ? (
-              <div style={smallText}>⏳ Resend OTP in {timeLeft}s</div>
-            ) : (
-              <button
-                style={resendBtn}
-                onClick={handleResendOtp}
-                disabled={loading}
-              >
-                Resend OTP
-              </button>
-            )}
-          </>
-        )}
+        <div style={inputWrapper}>
+          <label style={labelStyle}>
+            <span style={redAsterisk}>*</span>Email Address
+          </label>
+          <input
+            style={inputStyle}
+            type="text"
+            placeholder="Enter your Email Address"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            aria-label="Email or Manager ID"
+          />
+        </div>
 
-        <button style={mutedBtn} onClick={() => navigate(-1)}>
-          Back to Login
+        <button
+          style={primaryBtn}
+          onClick={handleSendCode}
+          disabled={loading}
+          aria-disabled={loading}
+        >
+          {loading ? "Sending..." : "Send Code"}
         </button>
+
+        <button style={backBtn} onClick={() => navigate("/login", { state: { role: "manager" } })}>
+          ‹ Back to Login
+        </button>
+
+        {message && <div aria-live="polite" style={msgStyles[messageType] || msgStyles.info}>{message}</div>}
       </div>
     </div>
   );

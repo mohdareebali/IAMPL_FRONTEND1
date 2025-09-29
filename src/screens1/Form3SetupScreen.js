@@ -606,50 +606,83 @@ useEffect(() => {
   };
   
 useEffect(() => {
-  const savedFull = sessionStorage.getItem("form3Data");   // full save
-  const savedTop = sessionStorage.getItem("form3Top");     // top 4
-  const fullSavedObj = savedFull ? JSON.parse(savedFull) : null;
-  const topSavedObj = savedTop ? JSON.parse(savedTop) : {};
+    const savedFull = sessionStorage.getItem("form3Data");
+    const savedTop = sessionStorage.getItem("form3Top");
+    const fullSavedObj = savedFull ? JSON.parse(savedFull) : null;
+    const topSavedObj = savedTop ? JSON.parse(savedTop) : {};
 
-  // ✅ Always prioritize values coming from Form2 if present
-  const fromForm2 = {
-    partNumber: location.state?.form2Data?.partNumber || topSavedObj.partNumber || "",
-    partName: location.state?.form2Data?.partName || topSavedObj.partName || "",
-    serialNumber: location.state?.form2Data?.serialNumber || topSavedObj.serialNumber || "",
-    fairIdentifier: location.state?.form2Data?.fairIdentifier || topSavedObj.fairIdentifier || "",
-  };
+    const fromForm2 = {
+      partNumber: location.state?.form2Data?.partNumber || topSavedObj.partNumber || "",
+      partName: location.state?.form2Data?.partName || topSavedObj.partName || "",
+      serialNumber: location.state?.form2Data?.serialNumber || topSavedObj.serialNumber || "",
+      fairIdentifier: location.state?.form2Data?.fairIdentifier || topSavedObj.fairIdentifier || "",
+    };
 
-  // ✅ Persist top 4 immediately for refresh
-  try {
-    sessionStorage.setItem("form3Top", JSON.stringify(fromForm2));
-  } catch (e) {}
+    try {
+      sessionStorage.setItem("form3Top", JSON.stringify(fromForm2));
+    } catch (e) {}
 
-  if (fullSavedObj) {
-    // ✅ Restore everything from save, overwrite top 4 with latest
-    setValues({
-      ...fullSavedObj,
-      "top-0": fromForm2.partNumber,
-      "top-1": fromForm2.partName,
-      "top-2": fromForm2.serialNumber,
-      "top-3": fromForm2.fairIdentifier,
-    });
-  } else {
-    // ✅ No save yet → only top 4, others empty
-    setValues((prev) => ({
-      ...prev,
-      "top-0": fromForm2.partNumber,
-      "top-1": fromForm2.partName,
-      "top-2": fromForm2.serialNumber,
-      "top-3": fromForm2.fairIdentifier,
-    }));
-  }
-}, [location.state]);
+    // 🚩 Corrected Logic starts here
+    let restoredValues = {};
+    if (fullSavedObj) {
+      // Restore all values from a full save
+      restoredValues = {
+        ...fullSavedObj,
+        "top-0": fromForm2.partNumber,
+        "top-1": fromForm2.partName,
+        "top-2": fromForm2.serialNumber,
+        "top-3": fromForm2.fairIdentifier,
+      };
+      
+      // ✅ Count rows from the saved data and update the `rows` state
+      let maxRowIndex = -1;
+      Object.keys(fullSavedObj).forEach(key => {
+        // Find keys that match the table cells, e.g., 'cell-0-1', 'cell-1-5', etc.
+        const match = key.match(/^cell-char-(\d+)|cell-bubble-(\d+)|cell-(\d+)-(\d+)|req-desc-(\d+)|req-tol-(\d+)/);
+        if (match) {
+          const rowIndex = parseInt(match[1] || match[2] || match[3] || match[5] || match[6], 10);
+          if (rowIndex > maxRowIndex) {
+            maxRowIndex = rowIndex;
+          }
+        }
+      });
+      
+      // If data for multiple rows was found, update the `rows` state
+      if (maxRowIndex >= 0) {
+        const newRows = Array.from({ length: maxRowIndex + 1 }, (_, i) => ({ id: i + 1 }));
+        setRows(newRows);
+      }
+      
+      // ✅ Also restore the `resultsValue` and `secondaryResults`
+      const savedResultsValue = JSON.parse(sessionStorage.getItem("resultsValue") || "{}");
+      const savedSecondaryResults = JSON.parse(sessionStorage.getItem("secondaryResults") || "{}");
+      const savedExtraField = JSON.parse(sessionStorage.getItem("extraField") || "{}");
+      
+      setResultsValue(savedResultsValue);
+      setSecondaryResults(savedSecondaryResults);
+      setExtraField(savedExtraField);
+
+    } else {
+      // No full save yet, only initialize the top 4 fields
+      restoredValues = {
+        "top-0": fromForm2.partNumber,
+        "top-1": fromForm2.partName,
+        "top-2": fromForm2.serialNumber,
+        "top-3": fromForm2.fairIdentifier,
+      };
+    }
+
+    setValues(prev => ({ ...prev, ...restoredValues }));
+  }, [location.state, setRows]); // Added setRows to the dependency array
 
 
-const performAction = (action) => {
-  if (action === "save") {
-    // Save full form (all fields including top 4)
-    sessionStorage.setItem("form3Data", JSON.stringify(values));
+
+  const performAction = (action) => {
+    if (action === "save") {
+      sessionStorage.setItem("form3Data", JSON.stringify(values));
+      sessionStorage.setItem("resultsValue", JSON.stringify(resultsValue));
+      sessionStorage.setItem("secondaryResults", JSON.stringify(secondaryResults));
+      sessionStorage.setItem("extraField", JSON.stringify(extraField));
 
     // Also persist top 4 separately
     try {
@@ -1376,13 +1409,13 @@ const textLines = [
                         return (
                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                              <SmartTextField
-                                label=""
+                                label="Operation No."
                                 name={`cell-char-${rowIndex}`}
                                 formData={values[`cell-char-${rowIndex}`] || ''} 
                                 setField={handleCellChange}
                              />
                              <SmartTextField
-                                 label=""
+                                 label="Baloon No"
                                  name={`cell-bubble-${rowIndex}`}
                                  formData={values[`cell-bubble-${rowIndex}`] || ''}
                                  setField={handleCellChange}
@@ -1768,4 +1801,3 @@ const textLines = [
     </Box>
   );
 }
-

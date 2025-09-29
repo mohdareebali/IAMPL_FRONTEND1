@@ -1,97 +1,87 @@
 // src/screens/ForgotPasswordScreen.js
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 function ForgotPasswordScreen() {
-  const [identifier, setIdentifier] = useState(""); // Employee ID or Email
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState(1);
+  const [identifier, setIdentifier] = useState(""); // Email or Employee ID
   const [loading, setLoading] = useState(false);
-
-  const [timeLeft, setTimeLeft] = useState(0); // countdown in seconds
-  const [otpSent, setOtpSent] = useState(false);
-
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("info"); // "success" | "error" | "info"
   const navigate = useNavigate();
 
-  // Strong password validation
-  const isStrongPassword = (password) => {
-    const regex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
-    return regex.test(password);
+  const showMessage = (text, type = "info", timeout = 6000) => {
+    setMessage(text);
+    setMessageType(type);
+    if (timeout) setTimeout(() => setMessage(""), timeout);
   };
 
-  // Countdown effect
-  useEffect(() => {
-    if (timeLeft <= 0) return;
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft]);
-
-  // Step 1: Send OTP
-  const handleSendOtp = async () => {
-    if (!identifier) return alert("Please enter your Employee ID or Email");
-    if (newPassword !== confirmPassword) return alert("Passwords do not match");
-    if (!isStrongPassword(newPassword)) {
-      return alert(
-        "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character (!@#$%^&*)"
-      );
+  const handleSendCode = async () => {
+    const value = identifier.trim();
+    if (!value) {
+      showMessage("Please enter your Email Address or Employee ID", "error");
+      return;
     }
 
     setLoading(true);
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/employees/forgot-password",
-        { identifier }
-      );
-      alert(response.data.message || "OTP sent");
-      setStep(2);
-      setOtpSent(true);
-      setTimeLeft(60); // 60s countdown
-    } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.error || "Something went wrong.");
+      // Request backend to send OTP only if identifier exists
+      // Expected backend behavior:
+      //  - 200 OK + { message, email? } -> OTP sent
+      //  - 4xx -> identifier not found or validation error
+      const res = await axios.post("http://localhost:5000/api/employees/forgot-password", {
+        identifier: value,
+      });
+
+      // Show success message
+      showMessage(res.data.message || "Verification code sent to your email", "success", 4000);
+
+      // Prefer email returned by backend
+      let emailToPass = res.data?.email || "";
+
+      // If backend didn't return an email and identifier is not an email,
+      // try to resolve the employee's email via GET /api/employees as a fallback.
+      // (Your backend exposes /api/employees that returns the list.)
+      if (!emailToPass && value && !value.includes("@")) {
+        try {
+          const empRes = await axios.get("http://localhost:5000/api/employees");
+          const list = empRes.data || [];
+          const found = list.find(
+            (it) =>
+              (it.employee_id && it.employee_id.toString() === value.toString()) ||
+              (it.email && it.email.toString() === value.toString())
+          );
+          if (found && found.email) {
+            emailToPass = found.email;
+          }
+        } catch (errFetch) {
+          // ignore error - we'll fallback to showing identifier
+          console.warn("Failed to resolve email for identifier:", errFetch);
+        }
+      }
+
+      // Navigate to OTP verification screen, pass identifier and email if resolved by backend or lookup
+      navigate("/forgot-password/otp", {
+        state: { identifier: value, email: emailToPass || value },
+      });
+    } catch (err) {
+      console.error("Forgot password error:", err);
+
+      // Prefer backend error message when available
+      const errMsg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        (err?.response?.status === 404
+          ? "No account found with that identifier."
+          : "Failed to send code. Please try again.");
+
+      showMessage(errMsg, "error", 7000);
     } finally {
       setLoading(false);
     }
   };
 
-  // Step 2: Verify OTP & Reset Password
-  const handleVerifyOtp = async () => {
-    if (!otp) return alert("Please enter OTP");
-    if (!isStrongPassword(newPassword)) {
-      return alert(
-        "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character (!@#$%^&*)"
-      );
-    }
-
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        "http://localhost:5000/api/employees/reset-password",
-        { identifier, otp, newPassword }
-      );
-      alert(response.data.message || "Password reset successful");
-      navigate("/login", { state: { role: "employee" } });
-    } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.error || "Something went wrong.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Resend OTP
-  const handleResendOtp = async () => {
-    if (timeLeft > 0) return;
-    await handleSendOtp();
-  };
-
-  // ---------- Styles ----------
+  // ---------- Styles (match the provided screenshot) ----------
   const pageStyle = {
     minHeight: "100vh",
     display: "flex",
@@ -99,9 +89,8 @@ function ForgotPasswordScreen() {
     justifyContent: "center",
     padding: 20,
     boxSizing: "border-box",
-    background: "linear-gradient(90deg, #ffffff 0%, #f6fbff 100%)",
-    fontFamily: "Arial, sans-serif",
-    color: "#222",
+    background: "#fff",
+    fontFamily: "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial",
   };
 
   const cardStyle = {
@@ -110,201 +99,123 @@ function ForgotPasswordScreen() {
     padding: 36,
     borderRadius: 8,
     background: "#fff",
-    border: "2px dashed rgba(0,0,0,0.12)",
+    border: "2px dashed rgba(15,23,42,0.25)",
     boxShadow: "0 8px 28px rgba(13,71,161,0.03)",
     boxSizing: "border-box",
     textAlign: "center",
   };
 
-  const logoStyle = {
-    width: 120,
-    display: "block",
-    margin: "6px auto 12px",
+  const iconWrapper = { display: "block", margin: "0 auto 12px" };
+  const titleStyle = { fontSize: 20, fontWeight: 700, margin: "6px 0 6px", color: "#0f172a" };
+  const subtitleStyle = {
+    fontSize: 14,
+    color: "#6b7280",
+    marginBottom: 18,
+    maxWidth: 440,
+    marginLeft: "auto",
+    marginRight: "auto",
   };
-  const titleStyle = {
-    fontSize: 20,
-    fontWeight: 700,
-    margin: "6px 0 4px",
-    color: "#263245",
-  };
-  const subtitleStyle = { fontSize: 13, color: "#6b6b6b", marginBottom: 14 };
 
-  const input = {
+  const inputWrapper = { width: "100%", marginTop: 6, textAlign: "left" };
+  const labelStyle = { fontSize: 14, color: "#0f172a", marginBottom: 6, display: "block" };
+  const redAsterisk = { color: "#ef4444", marginRight: 6 };
+
+  const inputStyle = {
     width: "100%",
-    padding: "10px 12px",
+    padding: "12px 14px",
     borderRadius: 8,
     border: "1px solid #d0d0d0",
     fontSize: 14,
     boxSizing: "border-box",
   };
 
-  const inputWrapper = { width: "100%", marginTop: 12, textAlign: "left" };
-  const labelStyle = {
-    fontSize: 13,
-    color: "#333",
-    marginBottom: 6,
-    display: "block",
-  };
-
   const primaryBtn = {
-    marginTop: 16,
+    marginTop: 18,
     width: "100%",
-    padding: "12px 14px",
+    padding: "14px",
     borderRadius: 8,
     border: "none",
     backgroundColor: "#184f9b",
     color: "#fff",
     fontWeight: 700,
-    fontSize: 15,
-    cursor: "pointer",
+    fontSize: 16,
+    cursor: loading ? "not-allowed" : "pointer",
+    opacity: loading ? 0.9 : 1,
   };
 
-  const mutedBtn = {
-    marginTop: 12,
-    width: "100%",
-    padding: "10px 12px",
-    borderRadius: 8,
+  const backBtn = {
+    marginTop: 14,
+    background: "transparent",
     border: "none",
-    backgroundColor: "#6c757d",
-    color: "#fff",
-    fontWeight: 600,
-    fontSize: 14,
+    color: "#1d4ed8",
+    textDecoration: "underline",
     cursor: "pointer",
+    fontSize: 14,
   };
 
-  const resendBtn = {
-    marginTop: 10,
-    width: "100%",
-    padding: "10px 12px",
-    borderRadius: 8,
-    border: "none",
-    backgroundColor: "#f39c12",
-    color: "#fff",
-    fontWeight: 700,
+  const msgBase = {
+    marginTop: 14,
+    padding: "10px",
+    borderRadius: 6,
     fontSize: 14,
-    cursor: "pointer",
-  };
-
-  const smallText = {
-    fontSize: 13,
-    color: "#333",
-    marginTop: 10,
     textAlign: "center",
   };
-
-  const responsiveCss = `
-    @media (max-width: 560px) {
-      .fp-card { padding: 20px; }
-      .fp-title { font-size: 18px; }
-    }
-  `;
+  const msgStyles = {
+    info: { ...msgBase, background: "#eef6ff", color: "#084b9b", border: "1px solid #cfe6ff" },
+    success: { ...msgBase, background: "#e6f4ea", color: "#1b7a3a", border: "1px solid #b7e0bf" },
+    error: { ...msgBase, background: "#fff1f0", color: "#a11", border: "1px solid #f5c6c6" },
+  };
 
   return (
     <div style={pageStyle}>
-      <style>{responsiveCss}</style>
-
-      <div
-        style={cardStyle}
-        className="fp-card"
-        role="main"
-        aria-labelledby="fp-title"
-      >
-        {/* ✅ Updated IAMPL Logo (jpg version) */}
-        <img
-          src="/International-Aerospace-Manufacturing-Pvt-Ltd-(IAMPL)-logo.jpg"
-          alt="IAMPL Logo"
-          style={logoStyle}
-        />
-        <div id="fp-title" style={titleStyle}>
-          Reset Password
-        </div>
-        <div style={subtitleStyle}>
-          Use OTP to verify and set a new password
+      <div style={cardStyle} role="main" aria-labelledby="fp-title">
+        <div style={iconWrapper} aria-hidden>
+          {/* lock icon */}
+          <svg
+            width="56"
+            height="56"
+            viewBox="0 0 24 24"
+            fill="none"
+            style={{ display: "block", margin: "0 auto" }}
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect x="6" y="10" width="12" height="8" rx="1.5" stroke="#374151" strokeWidth="1.5" fill="none" />
+            <path d="M8 10V8a4 4 0 018 0v2" stroke="#374151" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="12" cy="14" r="0.8" fill="#374151" />
+          </svg>
         </div>
 
-        {step === 1 && (
-          <>
-            <div style={inputWrapper}>
-              <label style={labelStyle}>Employee ID or Email</label>
-              <input
-                style={input}
-                type="text"
-                placeholder="Enter Employee ID or Email"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-              />
-            </div>
+        <h1 id="fp-title" style={titleStyle}>
+          Forgot Password
+        </h1>
 
-            <div style={inputWrapper}>
-              <label style={labelStyle}>New Password</label>
-              <input
-                style={input}
-                type="password"
-                placeholder="Enter new password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
-            </div>
+        <p style={subtitleStyle}>
+          Enter the email address with your account and we’ll send an email with confirmation to reset your password.
+        </p>
 
-            <div style={inputWrapper}>
-              <label style={labelStyle}>Confirm Password</label>
-              <input
-                style={input}
-                type="password"
-                placeholder="Confirm new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
+        <div style={inputWrapper}>
+          <label style={labelStyle}>
+            <span style={redAsterisk}>*</span>Email Address
+          </label>
+          <input
+            style={inputStyle}
+            type="text"
+            placeholder="Enter your Email Address"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            aria-label="Email or Employee ID"
+          />
+        </div>
 
-            <button
-              style={primaryBtn}
-              onClick={handleSendOtp}
-              disabled={loading}
-            >
-              {loading ? "Sending OTP..." : "Get OTP"}
-            </button>
-          </>
-        )}
-
-        {step === 2 && (
-          <>
-            <div style={inputWrapper}>
-              <label style={labelStyle}>Enter OTP</label>
-              <input
-                style={input}
-                type="text"
-                placeholder="Enter OTP"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-              />
-            </div>
-
-            <button
-              style={primaryBtn}
-              onClick={handleVerifyOtp}
-              disabled={loading}
-            >
-              {loading ? "Verifying..." : "Verify OTP & Reset Password"}
-            </button>
-
-            {otpSent && timeLeft > 0 ? (
-              <div style={smallText}>⏳ Resend OTP in {timeLeft}s</div>
-            ) : (
-              <button
-                style={resendBtn}
-                onClick={handleResendOtp}
-                disabled={loading}
-              >
-                Resend OTP
-              </button>
-            )}
-          </>
-        )}
-
-        <button style={mutedBtn} onClick={() => navigate(-1)}>
-          Back to Login
+        <button style={primaryBtn} onClick={handleSendCode} disabled={loading}>
+          {loading ? "Sending..." : "Send Code"}
         </button>
+
+        <button style={backBtn} onClick={() => navigate("/login", { state: { role: "employee" } })}>
+          ‹ Back to Login
+        </button>
+
+        {message && <div aria-live="polite" style={msgStyles[messageType] || msgStyles.info}>{message}</div>}
       </div>
     </div>
   );

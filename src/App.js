@@ -1,7 +1,7 @@
 // src/App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { FileProvider } from "./context/FileContext"; // ✅ Added FileProvider
+import { FilesProvider } from "./context/FileContext"; // ✅ FIXED: Correct name
 
 // Screens
 import HomeScreen from "./screens/HomeScreen";
@@ -10,7 +10,7 @@ import LoginScreen from "./screens/LoginScreen";
 import ForgotPasswordScreen from "./screens/ForgotPasswordScreen";
 import ManagerForgotScreen from "./screens/ManagerForgotScreen";
 import OTPVerificationScreen from "./screens/OTPVerificationScreen";
-import ManagerOTPVerificationScreen from "./screens/ManagerOTPVerificationScreen"; // Updated import
+import ManagerOTPVerificationScreen from "./screens/ManagerOTPVerificationScreen"; 
 import RegisterScreen from "./screens/RegisterScreen";
 import ManagerDashboardScreen from "./screens/ManagerDashboardScreen";
 import EmployeeDashboardScreen from "./screens/EmployeeDashboardScreen";
@@ -18,6 +18,8 @@ import EmployeeSetUpScreen from "./screens/EmployeeSetUpScreen";
 import EmployeeFairsDoneScreen from "./screens/EmployeeFairsDoneScreen";
 import EmployeeRejectedFairScreen from "./screens/EmployeeRejectedFairScreen";
 import EmployeeInfoScreen from "./screens/EmployeeInfoScreen";
+import ResetPassword from "./screens/ResetPassword";
+import ManagerResetPassword from "./screens/ManagerResetPassword"; // <-- added
 
 // New screens under src/screens1/
 import FolderUploadScreen from "./screens1/FolderUploadScreen";
@@ -27,7 +29,7 @@ import Form3SetupScreen from "./screens1/Form3SetupScreen";
 
 function App() {
   return (
-    <FileProvider> {/* ✅ Wrap the whole app with FileProvider */}
+    <FilesProvider> {/* ✅ Wrap app in FilesProvider */}
       <Router>
         <Routes>
           {/* Public Screens */}
@@ -38,13 +40,15 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
           <Route path="/manager-forgot" element={<ManagerForgotScreen />} />
           <Route path="/forgot-password/otp" element={<OTPVerificationScreen />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route
             path="/manager-forgot/otp"
             element={<ManagerOTPVerificationScreen />}
-          /> {/* Manager OTP */}
+          />
+          <Route path="/manager-reset-password" element={<ManagerResetPassword />} /> {/* <-- added */}
           <Route path="/register" element={<RegisterScreen />} />
 
-          {/* Manager & Employee Dashboards */}
+          {/* Dashboards */}
           <Route path="/dashboard/manager" element={<ManagerDashboardScreen />} />
           <Route path="/dashboard/employee" element={<EmployeeDashboardScreen />} />
 
@@ -60,7 +64,7 @@ function App() {
           <Route path="/form3setup" element={<Form3SetupScreen />} />
         </Routes>
       </Router>
-    </FileProvider>
+    </FilesProvider>
   );
 }
 

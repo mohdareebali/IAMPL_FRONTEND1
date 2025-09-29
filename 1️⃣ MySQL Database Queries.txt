@@ -99,3 +99,8 @@ ADD COLUMN otp_expiry DATETIME;
 ALTER TABLE employees 
 ADD COLUMN password_changed_at DATETIME,
 ADD COLUMN company_id VARCHAR(255);
+
+(Optional)
+ALTER TABLE employees
+ADD COLUMN form1_pdf LONGBLOB,
+ADD COLUMN form1_excel LONGBLOB;

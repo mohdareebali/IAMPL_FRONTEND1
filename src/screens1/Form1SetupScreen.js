@@ -1307,12 +1307,144 @@ const handlePdfExport = () => {
     doc.save('Form1_FAI_Report.pdf');
 };
 
+
+
+const handleExcelExport = (formData, rows) => {
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.json_to_sheet([]);
+
+  // Report Title and Subtitle
+  const wsData = [
+    ['', '', '', 'FAIR Form 1'],
+    ['', '', '', 'First Article Inspection Report - Part Number Accountability'],
+    [],
+  ];
+
+  // Helper function to add a section to the worksheet
+  const addSection = (sectionData) => {
+    XLSX.utils.sheet_add_aoa(worksheet, sectionData, { origin: -1 });
+    XLSX.utils.sheet_add_aoa(worksheet, [['']], { origin: -1 });
+  };
+
+  // Top Fields (Rows 1-4)
+  const partNumberText = formData.partNumber + (formData.customerPartNumber ? "\nCustomer Part Number: " + formData.customerPartNumber : "");
+  const topFields = [
+    ['1. PART NUMBER', '2. PART NAME', '3. SERIAL NUMBER', '4. FAIR IDENTIFIER'],
+    [partNumberText, formData.partName || "", formData.serialNumber || "", formData.fairIdentifier || ""],
+    [],
+    ['5. PART REVISION LEVEL', '6. DRAWING NUMBER', '7. DRAWING REVISION LEVEL', '8. ADDITIONAL CHANGES'],
+    [formData.partRevisionLevel || "", formData.drawingNumber || "", formData.drawingRevisionLevel || "", formData.additionalChanges || ""],
+    [],
+    ['9. MANUFACTURING PROCESS REFERENCE', '10. ORGANIZATION NAME'],
+    [formData.manufacturingProcessReference || "", formData.organizationName || ""],
+    [],
+    ['11. SUPPLIER CODE', '12. PURCHASE ORDER NUMBER'],
+    [formData.supplierCode || "", formData.purchaseOrderNumber || ""],
+  ];
+  addSection(topFields);
+
+  // ✅ CORRECTED FAI Type and Reason section to match image
+  let faiTypes = [];
+  if (formData.detailFAI) faiTypes.push('Detail FAI');
+  if (formData.assemblyFAI) faiTypes.push('Assembly FAI');
+  if (formData.fullFAI) faiTypes.push('Full FAI');
+  if (formData.partialFAI) faiTypes.push('Partial FAI');
+  const faiTypeString = faiTypes.join(', ');
+
+  let reasonText = "";
+  if (formData.faiReasonDropdown && formData.faiReasonDropdown !== "" && formData.faiReasonDropdown !== "Other") {
+      reasonText += formData.faiReasonDropdown;
+  }
+  if (formData.faiReason && formData.faiReason.trim() !== "") {
+      if (reasonText) reasonText += " - ";
+      reasonText += formData.faiReason;
+  }
+  if (formData.faiReasonCode && formData.faiReasonCode !== "") {
+      if (reasonText) reasonText += " - ";
+      reasonText += formData.faiReasonCode;
+  }
+  
+  const aogStatus = formData.aog ? 'Yes' : 'No';
+  const faaStatus = formData.faaApproved ? 'Yes' : 'No';
+
+  const faiSection = [
+    // Correctly placing all headers on one row
+    ['13.', '14. FAI Type:', '', '', 'Reason for Full/Partial FAI', 'AOG', 'FAA Approved'],
+    // Placing all data on the row below, aligned with headers
+    ['', faiTypeString, '', '', reasonText, aogStatus, faaStatus],
+  ];
+  addSection(faiSection);
+
+  // Table Data Section
+  const tableHeaders = ["15. PART NUMBER", "16. PART NAME", "17. PART TYPE", "18. SUPPLIER", "19. FAIR IDENTIFIER", "REFERENCE DOCUMENT"];
+  const tableData = rows.map((row, i) => [
+    formData[`indexPartNumber_${i}`] || '',
+    formData[`indexPartName_${i}`] || '',
+    formData[`indexPartType_${i}`] || '',
+    formData[`indexSupplier_${i}`] || '',
+    formData[`indexFairIdentifier_${i}`] || '',
+    row.referenceFile ? row.referenceFile.name : ''
+  ]);
+  const tableSection = [tableHeaders, ...tableData];
+  addSection(tableSection);
+
+  // Bottom Fields
+  const bottomFields = [
+    ['CUSTOMER', 'PROGRAM', 'TO DIVISION'],
+    [formData.customer || "", formData.program || "", formData.toDivision || ""],
+    [],
+    ['19. DOES FAIR CONTAIN A DOCUMENTED NONCONFORMANCE?', ''],
+    [formData.fairNonconformance || '', ''],
+    [],
+    ['20. FAIR VERIFIED BY', '21. DATE'],
+    [formData.fairVerifiedBy || "", formData.fairVerifiedDate || ""],
+    [],
+    ['22. FAIR REVIEWED/APPROVED BY', '23. DATE'],
+    [formData.fairReviewedBy || "", formData.fairReviewedDate || ""],
+    [],
+    ['24. CUSTOMER APPROVAL', '25. DATE'],
+    [formData.customerApproval || "", formData.customerApprovalDate || ""],
+    [],
+    ['26. COMMENTS'],
+    [formData.comments || ""],
+  ];
+  addSection(bottomFields);
+  
+  // Create and download the file
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'FAIR Form 1');
+  XLSX.writeFile(workbook, 'FAIR_Form1_Report.xlsx');
+};
+
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ padding: 4, backgroundColor: '#f4f7f6', minHeight: '100vh' }}>
         <Typography variant="h4" gutterBottom color="black">
           Form 1 – Part Number Accountability
         </Typography>
+
+        {/* Header actions */}
+<Box
+  sx={{
+    mt: 1,
+    mb: 3,
+    p: 2,
+    bgcolor: '#fff',
+    borderRadius: 2,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: 1.5,
+  }}
+>
+  <Button
+    variant="outlined"
+    onClick={() => setShowRawText((v) => !v)}
+  >
+    {showRawText ? 'Hide Extracted Text' : 'Show Extracted Text'}
+  </Button>
+</Box>
+
 
         {isLoading && (
           <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
@@ -2114,30 +2246,74 @@ const handlePdfExport = () => {
                   <SmartTextField label="26. Comments" name="comments" formData={formData} setField={setFieldValue} multiline rows={4} />
                 </Grid>
 
-                <Grid item xs={12} sx={{ mt: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Button variant="countained" onClick={() => setShowRawText((s) => !s)}>
-                    {showRawText ? 'Hide Extracted Text' : 'Show Extracted Text'}
-                  </Button>
-                  <Box>
-                    <Button variant="contained" onClick={handlePdfExport}  sx={{ mr: 2 }}>
-                      Download PDF
-                    </Button>
+                
+                  
+                  {/* Footer toolbar – same placement, improved UI & order */}
+<Box sx={{ mt: 4 }}>
+  <Box
+    sx={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      gap: 2,
+      p: 2,
+      bgcolor: '#fff',
+      borderRadius: 2,
+      boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+    }}
+  >
+    {/* Save */}
+    <Button
+      variant="contained"
+      onClick={handleSave}
+      sx={{ flex: 1, minWidth: 150 }}
+    >
+      Save
+    </Button>
 
-                    <Button variant="contained" color="primary" onClick={handleSave} sx={{ mr: 2 }}>
-                      Save
-                    </Button>
-                    <Button variant="contained" color="primary" onClick={handleNext}>
-                      Next
-                    </Button>
-                    <Button
-                      variant="countained"
-                      onClick={handleGoToUpload}
-                      sx={{ ml: 2 }}
-                    >
-                      Go to Upload Files
-                    </Button>
-                  </Box>
-                </Grid>
+    
+
+    {/* Download Excel */}
+    <Button
+      variant="outlined"
+      onClick={() => handleExcelExport(formData, rows)}
+      sx={{ flex: 1, minWidth: 150 }}
+    >
+      Download Excel
+    </Button>
+
+    
+
+    {/* Download PDF */}
+    <Button
+      variant="outlined"
+      onClick={handlePdfExport}
+      sx={{ flex: 1, minWidth: 150 }}
+    >
+      Download PDF
+    </Button>
+
+    {/* Go to Uploaded File */}
+    <Button
+      variant="text"
+      onClick={handleGoToUpload}
+      sx={{ flex: 1, minWidth: 150 }}
+    >
+      Go to Uploaded File
+    </Button>
+
+    {/* Next (final quick link at far right) */}
+    <Button
+      variant="text"
+      onClick={handleNext}
+      sx={{ flex: 1, minWidth: 150 }}
+    >
+      Go To Form 2
+    </Button>
+  </Box>
+</Box>
+
+                
               </Paper>
             </Grid>
 

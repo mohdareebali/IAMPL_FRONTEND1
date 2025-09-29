@@ -3,11 +3,6 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import footerLogo from "../assets/Innovascape-logo.png";
 
-// Material UI icons (outline person + star / person + pencil)
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import GradeOutlinedIcon from "@mui/icons-material/GradeOutlined";
-import EditNoteOutlinedIcon from "@mui/icons-material/EditNoteOutlined";
-
 function RoleSelectScreen() {
   const navigate = useNavigate();
 
@@ -20,7 +15,6 @@ function RoleSelectScreen() {
       <div style={wrap}>
         {/* Header */}
         <header style={header}>
-          {/* Use public JPG logo from your path (public folder) */}
           <img
             src="/International-Aerospace-Manufacturing-Pvt-Ltd-(IAMPL)-logo.jpg"
             alt="IAMPL logo"
@@ -28,7 +22,7 @@ function RoleSelectScreen() {
           />
           <h1 style={title}>FAIR Portal</h1>
           <p style={subtitle}>
-            Streamline FAIR FORM entries through search and autofill, extract and insert,
+            Streamline FAIR FORM entries through search and autofill, extract and insert,                      
             voice or key entries with accuracy and speed.
           </p>
         </header>
@@ -38,10 +32,12 @@ function RoleSelectScreen() {
           {/* Manager */}
           <article style={card}>
             <div style={cardInner}>
-              {/* Person outline with small star overlay (top-right) */}
               <div style={iconWrap}>
-                <PersonOutlineIcon style={personIcon} />
-                <GradeOutlinedIcon style={starIcon} />
+                <img
+                  src="/manager-1.png"
+                  alt="Manager Icon"
+                  style={customIcon}
+                />
               </div>
 
               <h2 style={cardTitle}>Manager Portal</h2>
@@ -71,10 +67,12 @@ function RoleSelectScreen() {
           {/* Employee */}
           <article style={card}>
             <div style={cardInner}>
-              {/* Person outline with small pencil overlay (top-right) */}
               <div style={iconWrap}>
-                <PersonOutlineIcon style={personIcon} />
-                <EditNoteOutlinedIcon style={penIcon} />
+                <img
+                  src="/employee-1.png"
+                  alt="Employee Icon"
+                  style={customIcon}
+                />
               </div>
 
               <h2 style={cardTitle}>Employee</h2>
@@ -175,7 +173,6 @@ const cardInner = {
 };
 
 const iconWrap = {
-  position: "relative",
   width: 56,
   height: 56,
   display: "flex",
@@ -184,33 +181,10 @@ const iconWrap = {
   marginTop: 4,
 };
 
-const personIcon = {
-  fontSize: 46,
-  color: "#374151",
-};
-
-const starIcon = {
-  position: "absolute",
-  top: -6,
-  right: -6,
-  fontSize: 20,
-  color: "#f59e0b", // gold
-  background: "#fff",
-  borderRadius: 999,
-  boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-  transform: "translate(30%, -20%)",
-};
-
-const penIcon = {
-  position: "absolute",
-  top: -6,
-  right: -6,
-  fontSize: 20,
-  color: "#ef4444", // red-ish
-  background: "#fff",
-  borderRadius: 6,
-  boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
-  transform: "translate(30%, -20%)",
+const customIcon = {
+  width: "100%",
+  height: "100%",
+  objectFit: "contain",
 };
 
 const cardTitle = { fontSize: 18, fontWeight: 700, color: "#0f172a" };

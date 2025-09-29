@@ -1,3 +1,4 @@
+// src/screens/EmployeeSetupScreen.js
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,6 +12,8 @@ function EmployeeSetupScreen() {
     company_id: "",
   });
   const [idError, setIdError] = useState("");
+  const [message, setMessage] = useState(""); // inline feedback text
+  const [messageType, setMessageType] = useState("info"); // "success" | "error" | "info"
   const navigate = useNavigate();
 
   // helper to generate strong password
@@ -34,8 +37,23 @@ function EmployeeSetupScreen() {
         if (Array.isArray(data)) setEmployees(data);
         else setEmployees([]);
       })
-      .catch((err) => console.error("❌ Error fetching employees:", err));
+      .catch((err) => {
+        console.error("❌ Error fetching employees:", err);
+        setMessageType("error");
+        setMessage("Failed to fetch employees for this company.");
+      });
   }, [newEmployee.company_id]);
+
+  // helper to show messages inline and auto-clear after n seconds
+  const showMessage = (text, type = "info", ttl = 5000) => {
+    setMessageType(type);
+    setMessage(text);
+    if (ttl > 0) {
+      setTimeout(() => {
+        setMessage("");
+      }, ttl);
+    }
+  };
 
   const handleChange = (e) =>
     setNewEmployee({ ...newEmployee, [e.target.name]: e.target.value });
@@ -48,16 +66,19 @@ function EmployeeSetupScreen() {
       if (exists) {
         setIdError("❌ Employee ID already exists!");
         setNewEmployee({ ...newEmployee, password: "" });
+        showMessage("Employee ID already exists. Please choose another.", "error");
         return;
       }
       setIdError("");
-      setNewEmployee({ ...newEmployee, password: generatePassword() });
+      const pwd = generatePassword();
+      setNewEmployee({ ...newEmployee, password: pwd });
+      showMessage("Password generated.", "success", 2500);
     }
   };
 
   const handleAdd = async () => {
     if (idError) {
-      alert("Please use a unique Employee ID");
+      showMessage("Please use a unique Employee ID", "error");
       return;
     }
 
@@ -67,8 +88,9 @@ function EmployeeSetupScreen() {
       !newEmployee.password ||
       !newEmployee.company_id
     ) {
-      alert(
-        "Please fill all fields including Company ID and generate password"
+      showMessage(
+        "Please fill all fields including Company ID and generate password",
+        "error"
       );
       return;
     }
@@ -82,7 +104,7 @@ function EmployeeSetupScreen() {
 
       const data = await res.json();
       if (res.ok) {
-        alert(data.message);
+        showMessage(data.message || "Employee added successfully", "success");
         setEmployees((prev) => [
           ...prev,
           { ...newEmployee, created_at: new Date() },
@@ -93,12 +115,13 @@ function EmployeeSetupScreen() {
           password: "",
           company_id: newEmployee.company_id,
         });
+        setIdError("");
       } else {
-        alert(data.error || "Failed to add employee");
+        showMessage(data.error || "Failed to add employee", "error");
       }
     } catch (err) {
       console.error("❌ Error adding employee:", err);
-      alert("Server error, please try again");
+      showMessage("Server error, please try again", "error");
     }
   };
 
@@ -115,11 +138,49 @@ function EmployeeSetupScreen() {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (res.ok) alert(data.message);
-      else alert(data.error || "Failed to send email");
+      if (res.ok) {
+        showMessage(data.message || "Credentials shared successfully", "success");
+      } else {
+        showMessage(data.error || "Failed to send email", "error");
+      }
     } catch (err) {
       console.error("❌ Error sharing credentials:", err);
-      alert("Server error, please try again");
+      showMessage("Server error, please try again", "error");
+    }
+  };
+
+  /* ---------- Message box styling helper ---------- */
+  const msgBoxBase = {
+    marginTop: 12,
+    padding: "10px 12px",
+    borderRadius: 8,
+    fontSize: 14,
+    textAlign: "center",
+    maxWidth: 760,
+  };
+  const getMsgStyle = () => {
+    switch (messageType) {
+      case "success":
+        return {
+          ...msgBoxBase,
+          background: "#e6ffef",
+          color: "#065f46",
+          border: "1px solid #a7f3d0",
+        };
+      case "error":
+        return {
+          ...msgBoxBase,
+          background: "#fff1f2",
+          color: "#9b1c1c",
+          border: "1px solid #fecaca",
+        };
+      default:
+        return {
+          ...msgBoxBase,
+          background: "#eef2ff",
+          color: "#0f172a",
+          border: "1px solid #dbeafe",
+        };
     }
   };
 
@@ -204,6 +265,9 @@ function EmployeeSetupScreen() {
             Reset
           </button>
         </div>
+
+        {/* Inline message under primary controls */}
+        {message ? <div style={getMsgStyle()}>{message}</div> : null}
       </div>
 
       <div style={listCard}>

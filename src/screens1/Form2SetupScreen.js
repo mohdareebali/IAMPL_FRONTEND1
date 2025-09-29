@@ -42,6 +42,7 @@ import 'react-pdf/dist/Page/AnnotationLayer.css';
 import { jsPDF } from 'jspdf';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import CloseIcon from '@mui/icons-material/Close';
+  import * as XLSX from 'xlsx';
 
 function FieldWithDismissableHelper({ label, name, formData, setField, error, helperText, suggestions, sx }) {
   const [showHelper, setShowHelper] = React.useState(true);
@@ -1091,6 +1092,79 @@ const referenceDocValue = refDocNames.join('\n');
     doc.save('FAIR_Form2_Report.pdf');
   };
 
+
+// Add this function inside the Form2SetupScreen component,
+// for example, right after the handleNextToForm3 function
+const handleExcelExport = () => {
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.json_to_sheet([]);
+  const wsData = [
+    ['', '', '', 'Form 2: Product Accountability – Materials, Special Processes, and Functional Testing'],
+    [],
+    ['1. Part Number', '2. Part Name', '3. Serial Number', '4. FAIR Identifier'],
+    [formData.partNumber, formData.partName, formData.serialNumber, formData.fairIdentifier],
+  ];
+  XLSX.utils.sheet_add_aoa(worksheet, wsData, { origin: 'A1' });
+  const merges = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }];
+  let rowIndex = wsData.length;
+
+  const addTable = (title, sectionData, headers) => {
+    XLSX.utils.sheet_add_aoa(worksheet, [['']], { origin: -1 });
+    rowIndex++;
+    XLSX.utils.sheet_add_aoa(worksheet, [[title]], { origin: -1 });
+    rowIndex++;
+    XLSX.utils.sheet_add_aoa(worksheet, [headers], { origin: -1 });
+    rowIndex++;
+
+    const tableData = sectionData.map(row => {
+      const suppliersListValue = (row.refDocFile && row.refDocFile.name) || row.refDocText || '';
+      const certs = (row.certNumbers || []).filter(Boolean).join('\n');
+      const refDocNames = [];
+      if (row.refDocFile2 && row.refDocFile2.name) {
+        refDocNames.push('Balloon Diagram: ' + row.refDocFile2.name);
+      }
+      if (row.refDocFile3 && row.refDocFile3.name) {
+        refDocNames.push('COC: ' + row.refDocFile3.name);
+      }
+      const referenceDocValue = refDocNames.join('\n');
+      return [
+        row.field0 || '', row.field1 || '', row.field2 || '', row.field3 || '',
+        suppliersListValue, row.customerApproval || '', certs, referenceDocValue,
+      ];
+    });
+
+    XLSX.utils.sheet_add_aoa(worksheet, tableData, { origin: -1 });
+    rowIndex += tableData.length;
+  };
+
+  const pdfTableHeaders = [
+    '5. Material/Process Name', '6. Specification Number', '7. Code', '8. Supplier',
+    '8a. Supplier List', '9. Customer Approval Verification', '10. Certificate of Conformance Number',
+    'Reference Document',
+  ];
+  
+  addTable('Materials', formData.materials || [], pdfTableHeaders);
+  addTable('Processes', formData.processes || [], pdfTableHeaders);
+  addTable('Inspections', formData.inspections || [], pdfTableHeaders);
+
+  XLSX.utils.sheet_add_aoa(worksheet, [['']], { origin: -1 });
+  rowIndex++;
+  XLSX.utils.sheet_add_aoa(worksheet, [['11. Functional Test Number', '12. Acceptance Report Number']], { origin: -1 });
+  rowIndex++;
+  XLSX.utils.sheet_add_aoa(worksheet, [[formData.functionalTestNumber, formData.acceptanceReportNumber]], { origin: -1 });
+  rowIndex++;
+  XLSX.utils.sheet_add_aoa(worksheet, [['']], { origin: -1 });
+  rowIndex++;
+  XLSX.utils.sheet_add_aoa(worksheet, [['13. Comments']], { origin: -1 });
+  rowIndex++;
+  XLSX.utils.sheet_add_aoa(worksheet, [[formData.comments]], { origin: -1 });
+  rowIndex++;
+  merges.push({ s: { r: rowIndex - 1, c: 0 }, e: { r: rowIndex - 1, c: 7 } });
+  worksheet['!merges'] = merges;
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'FAIR Form 2');
+  XLSX.writeFile(workbook, 'FAIR_Form2_Report.xlsx');
+};
+
   const handleGoToForm1 = () => {
     navigate('/form1setup', {
       state: {
@@ -1672,6 +1746,9 @@ if (isSupplierField) {
             Download PDF
           </Button>
 
+<button onClick={() => handleExcelExport(formData)}>
+  Download Excel
+</button>
           <Button
             variant="contained"
             color="primary"
