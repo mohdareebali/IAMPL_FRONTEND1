@@ -1,6 +1,7 @@
 // src/screens/EmployeeDashboardScreen.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { initNotifications } from "./notification";
 
 /**
  * EmployeeDashboardScreen — IAMPL FAIR Portal style (full file)
@@ -28,14 +29,14 @@ function EmployeeDashboardScreen() {
 
   // UI state
   // state with saved value
-const [activePage, setActivePage] = useState(
-  localStorage.getItem("employeeDashboardPage") || "overview"
-);
+  const [activePage, setActivePage] = useState(
+    localStorage.getItem("employeeDashboardPage") || "overview"
+  );
 
-// update storage when activePage changes
-useEffect(() => {
-  localStorage.setItem("employeeDashboardPage", activePage);
-}, [activePage]);
+  // update storage when activePage changes
+  useEffect(() => {
+    localStorage.setItem("employeeDashboardPage", activePage);
+  }, [activePage]);
 
   const [collapsed, setCollapsed] = useState(true); // collapsed by default, expands on hover
   const [profileOpen, setProfileOpen] = useState(false);
@@ -53,6 +54,11 @@ useEffect(() => {
   useEffect(() => {
     setProfileOpen(false);
   }, [activePage]);
+
+  // ✅ Init notification panel for the bell (no logic change elsewhere)
+  useEffect(() => {
+    initNotifications("notification-bell");
+  }, []);
 
   return (
     // Zoom wrapper
@@ -74,6 +80,13 @@ useEffect(() => {
             role="button"
             tabIndex={0}
             aria-label="Go to manager dashboard"
+            onKeyDown={(e) => {
+              // accessibility: activate on Enter/Space without changing navigation logic
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onBrandClick();
+              }
+            }}
           >
             <img
               src="/International-Aerospace-Manufacturing-Pvt-Ltd-(IAMPL)-logo.jpg"
@@ -82,7 +95,11 @@ useEffect(() => {
             />
             {!collapsed && <div>FAIR Portal</div>}
           </div>
-          <h7>Menu</h7>
+
+          {/* Replaced invalid <h7> with an accessible label without changing layout intent */}
+          <div style={{ fontSize: 12, color: "#64748b", margin: "6px 0 8px 2px" }} aria-hidden>
+            Menu
+          </div>
 
           <nav style={styles.menu} aria-label="Sidebar menu">
             {/* icon prop now accepts the inline SVG key names */}
@@ -158,9 +175,9 @@ useEffect(() => {
             {/* RIGHT: notifications + profile */}
             <div style={styles.topbarRight}>
               <button
+                id="notification-bell"
                 aria-label="Notifications"
                 style={styles.iconBtn}
-                onClick={() => navigate("/notifications")}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -187,58 +204,114 @@ useEffect(() => {
               <div style={{ width: 12 }} />
 
               <div style={{ position: "relative" }}>
-                {/* Profile clickable area: avatar + name + caret */}
-                <button
-                  aria-haspopup="true"
-                  aria-expanded={profileOpen}
-                  onClick={() => setProfileOpen((p) => !p)}
-                  style={styles.profileContainer}
-                  title="Open profile"
-                >
-                  {/* avatar (initial or image) */}
-                  <div style={styles.profileAvatarImg}>
-                    {employee.name ? employee.name[0].toUpperCase() : "E"}
-                  </div>
-                  <div style={{ marginLeft: 10, textAlign: "left" }}>
-                    <div style={styles.profileName}>{employee.name || "John Doe"}</div>
-                    <div style={styles.profileRole}>{employee.role || "Employee"}</div>
-                  </div>
-                  <div style={{ marginLeft: 10, color: "#64748b" }}>▾</div>
-                </button>
+  <button
+    aria-haspopup="true"
+    aria-expanded={profileOpen}
+    onClick={() => setProfileOpen((p) => !p)}
+    style={styles.profileContainer}
+    title="Open profile"
+  >
+    <div style={styles.profileAvatarImg}>
+      {employee.name ? employee.name[0].toUpperCase() : "E"}
+    </div>
+    <div style={{ marginLeft: 10, textAlign: "left" }}>
+      <div style={styles.profileName}>{employee.name || "John Doe"}</div>
+      <div style={styles.profileRole}>{employee.role || "Employee"}</div>
+    </div>
+    <div style={{ marginLeft: 10, color: "#64748b" }}>▾</div>
+  </button>
 
-                {profileOpen && (
-                  <div style={styles.profileDropdown} role="menu" aria-label="Profile menu">
-                    <div style={styles.profileHeader}>
-                      <div style={styles.profileAvatarLarge}>
-                        {employee.name ? employee.name[0].toUpperCase() : "E"}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 700, color: "#0f172a" }}>{employee.name}</div>
-                        <div style={{ fontSize: 13, color: "#64748b" }}>{employee.role}</div>
-                      </div>
-                    </div>
+  {profileOpen && (
+    <div
+      style={{
+        position: "absolute",
+        right: 0,
+        top: 50,
+        width: 200,
+        background: "#fff",
+        borderRadius: 8,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        padding: "8px 0",
+        zIndex: 100,
+      }}
+    >
+      <button
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          width: "100%",
+          padding: "8px 14px",
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+          fontSize: 14,
+          color: "#0f172a",
+        }}
+        onClick={() => { setActivePage("profile"); setProfileOpen(false); }}
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle cx="12" cy="8" r="4" stroke="#0f172a" strokeWidth="1.6" />
+          <path
+            d="M4 20c1-4 7-6 8-6s7 2 8 6"
+            stroke="#0f172a"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+        </svg>
+        My Profile
+      </button>
 
-                    <hr style={{ border: "none", height: 1, background: "#eef2ff", margin: "10px 0" }} />
+      <button
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          width: "100%",
+          padding: "8px 14px",
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+          fontSize: 14,
+          color: "#b91c1c",
+          fontWeight: 600,
+        }}
+        onClick={() => navigate("/")}
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"
+            stroke="#b91c1c"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M10 17l5-5-5-5M15 12H3"
+            stroke="#b91c1c"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        Logout
+      </button>
+    </div>
+  )}
+</div>
 
-                    <div style={styles.profileInfo}>
-                      <ProfileRow label="Email" value={employee.email || "N/A"} />
-                      <ProfileRow label="Employee ID" value={employee.employee_id || "N/A"} />
-                      <ProfileRow label="Company ID" value={employee.company_id || "N/A"} />
-                    </div>
-
-                    <div style={{ marginTop: 12 }}>
-                      <button
-                        style={styles.logoutBtn}
-                        onClick={() => {
-                          navigate("/");
-                        }}
-                      >
-                        🚪 Logout
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
           </header>
 
@@ -248,6 +321,7 @@ useEffect(() => {
             {activePage === "forms" && <MyForms />}
             {activePage === "completed" && <CompletedForms />}
             {activePage === "help" && <HelpPage />}
+            {activePage === "profile" && <MyProfile employee={employee} />}
           </main>
         </div>
       </div>
@@ -280,7 +354,8 @@ function SideItem({ open, label, onClick, active, icon }) {
     width: "100%",
     textAlign: "left",
     fontSize: 15,
-    transition: "background 220ms cubic-bezier(.2,.9,.2,1), color 220ms cubic-bezier(.2,.9,.2,1), transform 220ms cubic-bezier(.2,.9,.2,1)",
+    transition:
+      "background 220ms cubic-bezier(.2,.9,.2,1), color 220ms cubic-bezier(.2,.9,.2,1), transform 220ms cubic-bezier(.2,.9,.2,1)",
     willChange: "transform, background",
     outline: "none",
   };
@@ -301,7 +376,14 @@ function SideItem({ open, label, onClick, active, icon }) {
     switch (name) {
       case "overview":
         return (
-          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <svg
+            width={size}
+            height={size}
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden
+          >
             <rect x="3" y="3" width="8" height="8" rx="1.5" stroke={stroke} strokeWidth="1.6" />
             <rect x="13" y="3" width="8" height="8" rx="1.5" stroke={stroke} strokeWidth="1.6" />
             <rect x="3" y="13" width="8" height="8" rx="1.5" stroke={stroke} strokeWidth="1.6" />
@@ -310,7 +392,14 @@ function SideItem({ open, label, onClick, active, icon }) {
         );
       case "forms":
         return (
-          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <svg
+            width={size}
+            height={size}
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden
+          >
             <rect x="4" y="3" width="16" height="18" rx="2" stroke={stroke} strokeWidth="1.6" />
             <path d="M8 8h8" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M8 12h8" stroke={stroke} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -319,16 +408,42 @@ function SideItem({ open, label, onClick, active, icon }) {
         );
       case "completed":
         return (
-          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <svg
+            width={size}
+            height={size}
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden
+          >
             <rect x="4" y="3" width="16" height="18" rx="2" stroke={stroke} strokeWidth="1.6" />
-            <path d="M8.5 12.5l2.2 2.2L16 10.4" stroke="#16a34a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M8.5 12.5l2.2 2.2L16 10.4"
+              stroke="#16a34a"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         );
       case "help":
         return (
-          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <svg
+            width={size}
+            height={size}
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden
+          >
             <circle cx="12" cy="12" r="9" stroke={stroke} strokeWidth="1.6" />
-            <path d="M9.5 10.5c0-1.1 1-1.9 2.5-1.9 1.5 0 2.5.8 2.5 2.1 0 1.7-1.5 2-2.2 2.9-.4.5-.3 1.1-.3 1.1" stroke={stroke} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            <path
+              d="M9.5 10.5c0-1.1 1-1.9 2.5-1.9 1.5 0 2.5.8 2.5 2.1 0 1.7-1.5 2-2.2 2.9-.4.5-.3 1.1-.3 1.1"
+              stroke={stroke}
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
             <circle cx="12" cy="17" r="0.6" fill={stroke} />
           </svg>
         );
@@ -356,7 +471,8 @@ function SideItem({ open, label, onClick, active, icon }) {
           width: 28,
           textAlign: "center",
           color: active ? "#184f9b" : "#64748b",
-          transition: "color 220ms cubic-bezier(.2,.9,.2,1), transform 220ms cubic-bezier(.2,.9,.2,1)",
+          transition:
+            "color 220ms cubic-bezier(.2,.9,.2,1), transform 220ms cubic-bezier(.2,.9,.2,1)",
           flexShrink: 0,
           display: "flex",
           alignItems: "center",
@@ -374,7 +490,15 @@ function SideItem({ open, label, onClick, active, icon }) {
 
 function ProfileRow({ label, value }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#374151", margin: "6px 0" }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        fontSize: 13,
+        color: "#374151",
+        margin: "6px 0",
+      }}
+    >
       <div style={{ color: "#64748b" }}>{label}</div>
       <div style={{ fontWeight: 600 }}>{value}</div>
     </div>
@@ -386,8 +510,12 @@ function ProfileRow({ label, value }) {
 function Overview({ employee }) {
   return (
     <div>
-      <h1 style={{ margin: 0, fontSize: 28, color: "#0f172a" }}>Welcome back, {employee.name || "John Doe"}!</h1>
-      <p style={{ color: "#64748b", marginTop: 8 }}>Complete your assigned FAIR forms easily and effectively. Track your progress too.</p>
+      <h1 style={{ margin: 0, fontSize: 28, color: "#0f172a" }}>
+        Welcome back, {employee.name || "John Doe"}!
+      </h1>
+      <p style={{ color: "#64748b", marginTop: 8 }}>
+        Complete your assigned FAIR forms easily and effectively. Track your progress too.
+      </p>
 
       <div style={{ marginTop: 18 }}>
         <div style={kpiStyles.strip}>
@@ -421,13 +549,35 @@ function Overview({ employee }) {
             <th style={styles.th}>Status</th>
             <th style={styles.th}>Due Date</th>
             <th style={styles.th}>Priority</th>
+            <th style={styles.th}>Action</th>
             <th style={styles.th}></th>
           </tr>
         </thead>
         <tbody>
-          <TaskRow part="ABC123" customer="RR" type="Initial Submission" status="In-Progress" due="01/02/2025" priority="High" />
-          <TaskRow part="XYZ124" customer="GE" type="Re-Submission" status="In-Progress" due="01/02/2025" priority="Medium" />
-          <TaskRow part="ABC125" customer="RR" type="Initial Submission" status="Assigned" due="01/02/2025" priority="Low" />
+          <TaskRow
+            part="ABC123"
+            customer="RR"
+            type="Initial Submission"
+            status="In-Progress"
+            due="01/02/2025"
+            priority="High"
+          />
+          <TaskRow
+            part="XYZ124"
+            customer="GE"
+            type="Re-Submission"
+            status="In-Progress"
+            due="01/02/2025"
+            priority="Medium"
+          />
+          <TaskRow
+            part="ABC125"
+            customer="RR"
+            type="Initial Submission"
+            status="Assigned"
+            due="01/02/2025"
+            priority="Low"
+          />
         </tbody>
       </table>
     </div>
@@ -455,19 +605,37 @@ function KpiDivider() {
 
 /* small inline SVG icons */
 function getKpiIcon(name) {
-  const base = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", xmlns: "http://www.w3.org/2000/svg" };
+  const base = {
+    width: 18,
+    height: 18,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    xmlns: "http://www.w3.org/2000/svg",
+  };
   switch (name) {
     case "time":
       return (
         <svg {...base}>
-          <path d="M12 7v6l4 2" stroke="#0f172a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M12 7v6l4 2"
+            stroke="#0f172a"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
           <circle cx="12" cy="12" r="9" stroke="#0f172a" strokeWidth="1.2" fill="none" />
         </svg>
       );
     case "forms":
       return (
         <svg {...base}>
-          <path d="M8 7h8M8 12h8M8 17h5" stroke="#0f172a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M8 7h8M8 12h8M8 17h5"
+            stroke="#0f172a"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
           <rect x="3" y="4" width="18" height="16" rx="2" stroke="#0f172a" strokeWidth="1.2" fill="none" />
         </svg>
       );
@@ -489,7 +657,14 @@ function getKpiIcon(name) {
     case "inprogress":
       return (
         <svg {...base}>
-          <path d="M3 12h4l3 8 4-16 3 8h4" stroke="#b45309" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <path
+            d="M3 12h4l3 8 4-16 3 8h4"
+            stroke="#b45309"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
         </svg>
       );
     case "total":
@@ -544,7 +719,8 @@ const kpiStyles = {
   divider: {
     width: 1,
     height: 36,
-    background: "linear-gradient(180deg, rgba(14,36,70,0.04), rgba(14,36,70,0.02))",
+    background:
+      "linear-gradient(180deg, rgba(14,36,70,0.04), rgba(14,36,70,0.02))",
     borderRadius: 2,
     margin: "0 6px",
   },
@@ -552,7 +728,7 @@ const kpiStyles = {
 
 /* Tasks / Table */
 
-function TaskRow({ part, customer, type, status, due, priority }) {
+function TaskRow({ part, customer, type, status, due, priority, Action }) {
   return (
     <tr>
       <td style={styles.td}>{part}</td>
@@ -564,7 +740,11 @@ function TaskRow({ part, customer, type, status, due, priority }) {
         <PriorityTag level={priority} />
       </td>
       <td style={{ ...styles.td, textAlign: "right" }}>
-        <button style={styles.primaryActionSmall}>Continue</button>
+        {Action ? (
+          Action
+        ) : (
+          <button style={styles.primaryActionSmall}>Continue</button>
+        )}
       </td>
     </tr>
   );
@@ -578,7 +758,15 @@ function PriorityTag({ level }) {
   };
   const s = map[level] || { bg: "#f3f4f6", color: "#374151" };
   return (
-    <span style={{ background: s.bg, color: s.color, padding: "6px 10px", borderRadius: 999, fontSize: 13 }}>
+    <span
+      style={{
+        background: s.bg,
+        color: s.color,
+        padding: "6px 10px",
+        borderRadius: 999,
+        fontSize: 13,
+      }}
+    >
       ● {level}
     </span>
   );
@@ -640,7 +828,14 @@ function FormCard({ title, subtitle, priority, progress }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div style={styles.formIcon} aria-hidden>
             {/* small document icon */}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden
+            >
               <rect x="3" y="3" width="14" height="18" rx="2" stroke="#0f172a" strokeWidth="1.2" fill="none" />
               <path d="M8 8h6" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M8 12h6" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -728,7 +923,8 @@ function CompletedForms() {
     {
       id: 2,
       title: "Form 2:",
-      subtitle: "Product Accountability - Materials, Special Processes, and Functional Testing",
+      subtitle:
+        "Product Accountability - Materials, Special Processes, and Functional Testing",
       priority: "High",
       progress: 45,
       completedDate: "01/02/2025",
@@ -737,7 +933,8 @@ function CompletedForms() {
     {
       id: 3,
       title: "Form 3:",
-      subtitle: "Characteristic Accountability, Verification and Compatibility Evaluation",
+      subtitle:
+        "Characteristic Accountability, Verification and Compatibility Evaluation",
       priority: "High",
       progress: 45,
       completedDate: "01/02/2025",
@@ -765,7 +962,14 @@ function CompletedForms() {
             <div style={styles.formCardHeader}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={styles.formIcon} aria-hidden>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden
+                  >
                     <rect x="3" y="3" width="14" height="18" rx="2" stroke="#0f172a" strokeWidth="1.2" fill="none" />
                     <path d="M8 8h6" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                     <path d="M8 12h6" stroke="#0f172a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -826,33 +1030,46 @@ function CompletedForms() {
             </div>
 
             <div style={styles.formCardFooter}>
-  <button
-    style={styles.viewBtn}
-    onClick={() => {
-      // keep navigation logic same as UI: go to form view (example route)
-      navigate("/form-view", { state: { title: c.title } });
-    }}
-    aria-label={`View ${c.title}`}
-    title="View Form"
-  >
-    {/* professional eye icon (inline SVG) */}
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-      style={{ marginRight: 8 }}
-    >
-      <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" stroke="#184f9b" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="12" cy="12" r="3" stroke="#184f9b" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-    </svg>
-
-    View Form
-  </button>
-</div>
-
+              <button
+                style={styles.viewBtn}
+                onClick={() => {
+                  // keep navigation logic same as UI: go to form view (example route)
+                  navigate("/form-view", { state: { title: c.title } });
+                }}
+                aria-label={`View ${c.title}`}
+                title="View Form"
+              >
+                {/* professional eye icon (inline SVG) */}
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                  style={{ marginRight: 8 }}
+                >
+                  <path
+                    d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"
+                    stroke="#184f9b"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3"
+                    stroke="#184f9b"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                  />
+                </svg>
+                View Form
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -878,12 +1095,17 @@ function HelpPage() {
   return (
     <div>
       <h1 style={{ marginTop: 0 }}>Help</h1>
-      <p style={{ color: "#64748b" }}>Find quick answers, guides, and support to resolve your queries easily.</p>
+      <p style={{ color: "#64748b" }}>
+        Find quick answers, guides, and support to resolve your queries easily.
+      </p>
 
       <div style={{ marginTop: 12 }}>
         {faqs.map((f, idx) => (
           <div key={idx} style={styles.accordion}>
-            <div style={styles.accordionHeader} onClick={() => setOpen(open === idx ? null : idx)}>
+            <div
+              style={styles.accordionHeader}
+              onClick={() => setOpen(open === idx ? null : idx)}
+            >
               <div>{f.q}</div>
               <div>{open === idx ? "▲" : "▼"}</div>
             </div>
@@ -900,6 +1122,8 @@ function HelpPage() {
             Get step-by-step guidance and detailed instructions in our User Manual.
           </div>
 
+          
+
           {/* Anchor with download attribute — place your PDF at public/user-manual.pdf (or change path later) */}
           <a
             href="/user-manual.pdf"
@@ -909,10 +1133,17 @@ function HelpPage() {
             title="Download User Manual"
           >
             <button style={styles.downloadBtn}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: 8 }}>
-                <path d="M12 3v12" stroke="#184f9b" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M8 11l4 4 4-4" stroke="#184f9b" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M21 21H3" stroke="#184f9b" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                style={{ marginRight: 8 }}
+              >
+                <path d="M12 3v12" stroke="#184f9b" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M8 11l4 4 4-4" stroke="#184f9b" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M21 21H3" stroke="#184f9b" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               Download User Manual
             </button>
@@ -922,6 +1153,435 @@ function HelpPage() {
     </div>
   );
 }
+
+/* -------- My Profile (inline page under the dashboard) -------- */
+function MyProfile({ employee: empFromProps }) {
+  // initial data (can be replaced later by API)
+  const defaults = {
+    firstName: "Ramesh",
+    lastName: "Sharma",
+    city: "Mumbai",
+    employeeId: "00000001",
+    phone: "+91 - 9087689808",
+    email: "ramesh.sharma@company.com",
+    profile: "Employee",
+    department: "Quality Assurance",
+  };
+
+  const saved = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("profileDraft") || "{}");
+    } catch {
+      return {};
+    }
+  })();
+
+  const [form, setForm] = useState({ ...defaults, ...saved });
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Ref to autofocus first field on edit
+  const firstFieldRef = useRef(null);
+
+  useEffect(() => {
+    if (isEditing && firstFieldRef.current) {
+      firstFieldRef.current.focus();
+    }
+  }, [isEditing]);
+
+  // --- Address handling (editable via "Add Address") ---
+  const savedAddress = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("addressDraft") || "{}");
+    } catch {
+      return {};
+    }
+  })();
+
+  const [address, setAddress] = useState({
+    street: savedAddress.street || "",
+    road: savedAddress.road || "",
+    city: savedAddress.city || "",
+    state: savedAddress.state || "",
+    country: savedAddress.country || "",
+    postalCode: savedAddress.postalCode || "",
+  });
+  const [addressEditing, setAddressEditing] = useState(
+    !savedAddress || Object.keys(savedAddress).length === 0
+  );
+
+  const employee = {
+    name: `${form.firstName || "Ramesh"} ${form.lastName || "Sharma"}`,
+    role: "Employee - Quality Assurance",
+    city: form.city || "Mumbai",
+    avatar: "/avatar-ramesh.jpg", // place in /public if you have it
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
+  };
+
+  const handleSave = () => {
+    localStorage.setItem("profileDraft", JSON.stringify(form));
+    setIsEditing(false);
+  };
+
+  const handleClear = () => {
+    setForm({
+      firstName: "",
+      lastName: "",
+      city: "",
+      employeeId: "",
+      phone: "",
+      email: "",
+      profile: "",
+      department: "",
+    });
+  };
+
+  // replace your Field with this
+const Field = ({ label, name, type = "text", required, options, inputRef }) => (
+  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <label style={{ fontSize: 12, color: "#0f172a" }}>
+      {required && <span style={{ color: "#dc2626" }}>* </span>}
+      {label}
+    </label>
+
+    {options ? (
+      // selects can stay disabled when not editing
+      <select
+        name={name}
+        value={String(form[name] ?? "")}
+        onChange={handleChange}
+        disabled={!isEditing}
+        style={inputStyle(!isEditing)}
+        ref={inputRef}
+      >
+        <option value="" disabled>Select</option>
+        {options.map((o) => (
+          <option key={o} value={o}>{o}</option>
+        ))}
+      </select>
+    ) : (
+      // inputs use readOnly instead of disabled
+      <input
+        type={type}
+        name={name}
+        value={String(form[name] ?? "")}
+        onChange={handleChange}
+        readOnly={!isEditing}
+        style={inputStyle(!isEditing)}
+        ref={inputRef}
+        onKeyDown={(e) => e.stopPropagation()}
+      />
+    )}
+  </div>
+);
+
+
+  // Address helpers
+  const onAddrChange = (e) => {
+    const { name, value } = e.target;
+    setAddress((a) => ({ ...a, [name]: value }));
+  };
+  const saveAddress = () => {
+    localStorage.setItem("addressDraft", JSON.stringify(address));
+    setAddressEditing(false);
+  };
+  const clearAddress = () => {
+    const cleared = { street: "", road: "", city: "", state: "", country: "", postalCode: "" };
+    setAddress(cleared);
+    localStorage.removeItem("addressDraft");
+    setAddressEditing(true);
+  };
+
+  return (
+    <div>
+      <h1 style={{ margin: 0, fontSize: 28, color: "#0f172a" }}>My Profile</h1>
+      <p style={{ color: "#64748b", marginTop: 6 }}>
+        View and update your personal details to keep your profile up to date.
+      </p>
+
+      {/* header */}
+      <div style={{ display: "flex", gap: 16, alignItems: "center", marginTop: 18 }}>
+        <img
+          src={employee.avatar || "https://via.placeholder.com/96"}
+          alt={employee.name}
+          style={{ width: 96, height: 96, borderRadius: "50%", objectFit: "cover" }}
+        />
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "#0f172a" }}>{employee.name}</div>
+          <div style={{ color: "#64748b", marginTop: 2 }}>{employee.role}</div>
+          <div style={{ color: "#0f172a", marginTop: 2 }}>{employee.city}</div>
+
+          <button
+            style={{
+              marginTop: 10,
+              border: "none",
+              background: "transparent",
+              color: "#184f9b",
+              fontWeight: 600,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+            onClick={() => alert("Edit profile picture")}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M12 5v14M5 12h14" stroke="#184f9b" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+            Edit Profile Picture
+          </button>
+        </div>
+      </div>
+
+      {/* Personal Info */}
+      <section
+        style={{
+          border: "1px solid #e6eefc",
+          borderRadius: 8,
+          background: "#fff",
+          padding: 16,
+          marginTop: 16,
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+          <span style={{ fontWeight: 800, color: "#0f172a" }}>Personal Information</span>
+          {!isEditing ? (
+            <button
+              style={editBtnStyle}
+              onClick={() => setIsEditing(true)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M4 21h4l11-11a2.828 2.828 0 10-4-4L4 17v4z"
+                  stroke="#184f9b" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Edit
+            </button>
+          ) : (
+            <div style={{ display: "flex", gap: 10 }}>
+              <button style={secondaryBtnStyle} onClick={handleClear}>Clear</button>
+              <button style={primaryBtnStyle} onClick={handleSave}>Save</button>
+            </div>
+          )}
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            columnGap: 16,
+            rowGap: 12,
+          }}
+        >
+          <Field label="First Name" name="firstName" required inputRef={firstFieldRef} />
+          <Field label="Last Name" name="lastName" required />
+          <Field label="Location" name="city" />
+          <Field label="Employee ID" name="employeeId" />
+          <Field label="Email Address" name="email" type="email" />
+          <Field label="Contact Number" name="phone" />
+          <Field
+            label="Profile"
+            name="profile"
+            options={["Employee", "Manager", "Admin"]}
+          />
+          <Field
+            label="Department"
+            name="department"
+            options={["Quality Assurance", "Manufacturing", "Design", "Supply Chain"]}
+          />
+        </div>
+      </section>
+
+      {/* Address */}
+      <section
+        style={{
+          border: "1px solid #e6eefc",
+          borderRadius: 8,
+          background: "#fff",
+          padding: 16,
+          marginTop: 16,
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+          <span style={{ fontWeight: 800, color: "#0f172a" }}>Address</span>
+          {!addressEditing ? (
+            <button style={editBtnStyle} onClick={() => setAddressEditing(true)}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5v14M5 12h14" stroke="#184f9b" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+              Add Address
+            </button>
+          ) : null}
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            columnGap: 24,
+            rowGap: 10,
+          }}
+        >
+          <AddrInput
+            label="Street"
+            name="street"
+            placeholder="Type Street"
+            value={address.street}
+            onChange={onAddrChange}
+            disabled={!addressEditing}
+          />
+          <AddrInput
+            label="Road"
+            name="road"
+            placeholder="Type Road"
+            value={address.road}
+            onChange={onAddrChange}
+            disabled={!addressEditing}
+          />
+          <AddrInput
+            label="City"
+            name="city"
+            placeholder="Type City"
+            value={address.city}
+            onChange={onAddrChange}
+            disabled={!addressEditing}
+          />
+          <AddrInput
+            label="State"
+            name="state"
+            placeholder="Type State"
+            value={address.state}
+            onChange={onAddrChange}
+            disabled={!addressEditing}
+          />
+          <AddrInput
+            label="Country"
+            name="country"
+            placeholder="Type Country"
+            value={address.country}
+            onChange={onAddrChange}
+            disabled={!addressEditing}
+          />
+          <AddrInput
+            label="Postal Code"
+            name="postalCode"
+            placeholder="Type Postal Code"
+            value={address.postalCode}
+            onChange={onAddrChange}
+            disabled={!addressEditing}
+          />
+        </div>
+
+        {/* Address action buttons appear ONLY in edit mode */}
+        {addressEditing && (
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>
+            <button style={secondaryBtnStyle} onClick={clearAddress}>
+              Clear
+            </button>
+            <button style={primaryBtnStyle} onClick={saveAddress}>
+              Save
+            </button>
+          </div>
+        )}
+      </section>
+
+      {/* Logout */}
+      <button
+        style={{
+          marginTop: 18,
+          borderRadius: 8,
+          padding: "10px 14px",
+          border: "1px solid #fca5a5",
+          background: "#fff",
+          color: "#b91c1c",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          fontWeight: 600,
+          cursor: "pointer",
+        }}
+        onClick={() => window.location.assign("/")}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"
+                stroke="#b91c1c" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M10 17l5-5-5-5M15 12H3"
+                stroke="#b91c1c" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        Logout
+      </button>
+    </div>
+  );
+}
+
+function ProfileField({ label, value }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 4 }}>{label}</div>
+      <div style={{ color: "#0f172a", fontWeight: 600 }}>{value}</div>
+    </div>
+  );
+}
+
+// Address input small component
+function AddrInput({ label, name, placeholder, value, onChange, disabled }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <label style={{ fontSize: 12, color: "#0f172a" }}>{label}</label>
+      <input
+        name={name}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        readOnly={!!disabled}              
+        style={inputStyle(!!disabled)}
+        onKeyDown={(e) => e.stopPropagation()}
+      />
+    </div>
+  );
+}
+
+/* helpers for MyProfile inputs/buttons */
+const inputStyle = (readOnly) => ({
+  padding: "10px 12px",
+  borderRadius: 8,
+  border: "1px solid #d1d5db",
+  background: readOnly ? "#f8fafc" : "#fff",
+  outline: "none",
+  fontSize: 14,
+});
+const editBtnStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  border: "1px solid #cfe0f8",
+  background: "#fff",
+  color: "#0f172a",
+  borderRadius: 8,
+  padding: "6px 10px",
+  cursor: "pointer",
+  fontSize: 14,
+};
+const primaryBtnStyle = {
+  padding: "8px 14px",
+  borderRadius: 8,
+  border: "none",
+  background: "#184f9b",
+  color: "#fff",
+  cursor: "pointer",
+  fontWeight: 600,
+};
+const secondaryBtnStyle = {
+  padding: "8px 14px",
+  borderRadius: 8,
+  border: "1px solid #cfe0f8",
+  background: "#fff",
+  color: "#0f172a",
+  cursor: "pointer",
+  fontWeight: 600,
+};
 
 /* ---------------- Styles ---------------- */
 
@@ -936,7 +1596,11 @@ const styles = {
     background: "#fff",
   },
 
-  app: { display: "flex", minHeight: "100vh", fontFamily: "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial" },
+  app: {
+    display: "flex",
+    minHeight: "100vh",
+    fontFamily: "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial",
+  },
 
   /* Sidebar (white style) */
   sidebar: {
@@ -947,7 +1611,8 @@ const styles = {
     background: "#ffffff",
     color: "#0f172a",
     padding: 16,
-    transition: "width 260ms cubic-bezier(.2,.9,.2,1), box-shadow 260ms cubic-bezier(.2,.9,.2,1)",
+    transition:
+      "width 260ms cubic-bezier(.2,.9,.2,1), box-shadow 260ms cubic-bezier(.2,.9,.2,1)",
     zIndex: 30,
     display: "flex",
     flexDirection: "column",
@@ -955,8 +1620,24 @@ const styles = {
     boxSizing: "border-box",
     boxShadow: "0 0 0 rgba(0,0,0,0)",
   },
-  brand: { display: "flex", alignItems: "center", gap: 12, marginBottom: 18, cursor: "pointer" },
-  brandLogo: { width: 44, height: 36, objectFit: "contain", background: "#fff", borderRadius: 6, padding: 4, border: "1px solid #eef2ff", transition: "width 260ms cubic-bezier(.2,.9,.2,1), height 260ms cubic-bezier(.2,.9,.2,1)" },
+  brand: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 18,
+    cursor: "pointer",
+  },
+  brandLogo: {
+    width: 44,
+    height: 36,
+    objectFit: "contain",
+    background: "#fff",
+    borderRadius: 6,
+    padding: 4,
+    border: "1px solid #eef2ff",
+    transition:
+      "width 260ms cubic-bezier(.2,.9,.2,1), height 260ms cubic-bezier(.2,.9,.2,1)",
+  },
   brandText: { fontWeight: 800, fontSize: 16, color: "#0f172a" },
 
   menu: { display: "flex", flexDirection: "column", gap: 8, marginTop: 6 },
@@ -1003,6 +1684,7 @@ const styles = {
     padding: "10px 14px 10px 44px",
     borderRadius: 10,
     border: "1px solid #94a3b8",
+
     fontSize: 14,
     outline: "none",
     background: "#fff",
@@ -1010,7 +1692,13 @@ const styles = {
     boxSizing: "border-box",
   },
 
-  topbarRight: { display: "flex", alignItems: "center", gap: 10, minWidth: 220, justifyContent: "flex-end" },
+  topbarRight: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    minWidth: 220,
+    justifyContent: "flex-end",
+  },
 
   iconBtn: { border: "none", background: "transparent", cursor: "pointer", fontSize: 18 },
 
@@ -1060,20 +1748,63 @@ const styles = {
   },
 
   profileHeader: { display: "flex", gap: 12, alignItems: "center" },
-  profileAvatarLarge: { width: 48, height: 48, borderRadius: 8, background: "#1e293b", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700 },
+  profileAvatarLarge: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    background: "#1e293b",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#fff",
+    fontWeight: 700,
+  },
   profileInfo: { marginTop: 8 },
 
-  logoutBtn: { width: "100%", padding: 10, borderRadius: 8, border: "none", background: "#ef4444", color: "#fff", cursor: "pointer" },
+  logoutBtn: {
+    width: "100%",
+    padding: 10,
+    borderRadius: 8,
+    border: "none",
+    background: "#ef4444",
+    color: "#fff",
+    cursor: "pointer",
+  },
 
   content: { padding: 28, background: "#f8fafc", minHeight: "calc(100vh - 72px)" },
 
-  filterPill: { padding: "8px 12px", borderRadius: 8, border: "1px solid #dbeafe", background: "#f1f8ff", color: "#184f9b", fontSize: 13, cursor: "pointer", transition: "transform 180ms ease" },
+  filterPill: {
+    padding: "8px 12px",
+    borderRadius: 8,
+    border: "1px solid #dbeafe",
+    background: "#f1f8ff",
+    color: "#184f9b",
+    fontSize: 13,
+    cursor: "pointer",
+    transition: "transform 180ms ease",
+  },
 
-  table: { width: "100%", borderCollapse: "collapse", marginTop: 18, background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 6px 18px rgba(12,24,48,0.04)" },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+    marginTop: 18,
+    background: "#fff",
+    borderRadius: 12,
+    overflow: "hidden",
+    boxShadow: "0 6px 18px rgba(12,24,48,0.04)",
+  },
   th: { padding: "14px 18px", textAlign: "left", color: "#0f172a", fontWeight: 700 },
   td: { padding: "18px 20px", borderBottom: "1px solid #eef2ff", color: "#0f172a" },
 
-  primaryActionSmall: { background: "#184f9b", color: "#fff", border: "none", padding: "8px 12px", borderRadius: 8, cursor: "pointer", transition: "transform 150ms ease" },
+  primaryActionSmall: {
+    background: "#184f9b",
+    color: "#fff",
+    border: "none",
+    padding: "8px 12px",
+    borderRadius: 8,
+    cursor: "pointer",
+    transition: "transform 150ms ease",
+  },
 
   /* Card grid updated — more like screenshot layout */
   cardGrid: {
@@ -1131,8 +1862,9 @@ const styles = {
 
   progressLabel: { fontSize: 12, color: "#6b7280", marginBottom: 6 },
 
-  progressOuter: { height: 8, borderRadius: 6, background: "#f3f4f6", marginTop: 4 },
-  progressInner: { height: "100%", borderRadius: 6, background: "#0f172a" },
+  /* keep only one definition of progressOuter / progressInner */
+  progressOuter: { height: 8, borderRadius: 6, background: "#f3f4f6", marginTop: 8 },
+  progressInner: { height: "100%", borderRadius: 6, background: "#184f9b" },
 
   formDetails: {
     display: "grid",
@@ -1153,12 +1885,15 @@ const styles = {
     marginTop: 14,
   },
 
-  startBtn: { padding: "8px 14px", background: "#184f9b", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", transition: "transform 150ms ease" },
-
-  progressOuter: { height: 8, borderRadius: 6, background: "#f3f4f6", marginTop: 8 },
-  progressInner: { height: "100%", borderRadius: 6, background: "#184f9b" },
-
-  startBtn: { padding: "10px 16px", background: "#184f9b", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer" },
+  /* keep only one definition of startBtn */
+  startBtn: {
+    padding: "10px 16px",
+    background: "#184f9b",
+    color:"#fff",
+    border: "none",
+    borderRadius: 8,
+    cursor: "pointer",
+  },
 
   /* view button used in Completed forms cards */
   viewBtn: {
@@ -1198,7 +1933,13 @@ const styles = {
   },
 
   accordion: { border: "1px solid #e6eefc", borderRadius: 8, marginTop: 12, overflow: "hidden" },
-  accordionHeader: { padding: 12, display: "flex", justifyContent: "space-between", cursor: "pointer", background: "#fff" },
+  accordionHeader: {
+    padding: 12,
+    display: "flex",
+    justifyContent: "space-between",
+    cursor: "pointer",
+    background: "#fff",
+  },
   accordionBody: { padding: 12, background: "#fbfdff", color: "#475569" },
 };
 

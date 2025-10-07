@@ -21,6 +21,7 @@ import EmployeeInfoScreen from "./screens/EmployeeInfoScreen";
 import ResetPassword from "./screens/ResetPassword";
 import ManagerResetPassword from "./screens/ManagerResetPassword"; // <-- added
 
+
 // New screens under src/screens1/
 import FolderUploadScreen from "./screens1/FolderUploadScreen";
 import Form1SetupScreen from "./screens1/Form1SetupScreen";
@@ -51,6 +52,8 @@ function App() {
           {/* Dashboards */}
           <Route path="/dashboard/manager" element={<ManagerDashboardScreen />} />
           <Route path="/dashboard/employee" element={<EmployeeDashboardScreen />} />
+          {/* Ensure bell navigate('/notifications') resolves without 404 */}
+          <Route path="/notifications" element={<EmployeeDashboardScreen />} />
 
           {/* Employee setup screens */}
           <Route path="/employee-setup" element={<EmployeeSetUpScreen />} />

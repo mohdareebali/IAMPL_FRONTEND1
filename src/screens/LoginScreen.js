@@ -122,7 +122,7 @@ function LoginScreen() {
             style={input}
             type="text"
             placeholder={`Enter your ${
-              role === "employee" ? "employee ID/ Email Address" : "company ID/ Email Address"
+              role === "employee" ? "Employee ID/ Email Address" : "company ID/ Email Address"
             }`}
             value={id}
             onChange={(e) => setId(e.target.value)}

@@ -190,17 +190,17 @@ function ForgotPasswordScreen() {
         </h1>
 
         <p style={subtitleStyle}>
-          Enter the email address with your account and we’ll send an email with confirmation to reset your password.
+          Enter the email address of your account or employee id and we’ll send an email with confirmation to reset your password.
         </p>
 
         <div style={inputWrapper}>
           <label style={labelStyle}>
-            <span style={redAsterisk}>*</span>Email Address
+            <span style={redAsterisk}>*</span>Email Address/Employee ID
           </label>
           <input
             style={inputStyle}
             type="text"
-            placeholder="Enter your Email Address"
+            placeholder="Enter your Email Address or Employee ID"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             aria-label="Email or Employee ID"
